@@ -19,7 +19,6 @@ define('MOBILE_NUMBER_UNIQUE_YES_VERIFIED', 2);
  * Implements hook_menu().
  */
 function mobile_number_menu() {
-
   $items = array();
 
   return $items;
@@ -112,7 +111,7 @@ function mobile_number_field_instance_settings_form($field, $instance) {
     '#type' => 'select',
     '#title' => t('Allowed Countries'),
     '#options' => MobileNumber::getCountryOptions(array(), TRUE),
-    '#default_value' => !empty($settings['country']) ? $settings['country'] : NULL,
+    '#default_value' => !empty($settings['countries']) ? $settings['countries'] : NULL,
     '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
     '#multiple' => TRUE,
     '#attached' => array('css' => array(drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css')),
@@ -136,7 +135,7 @@ function mobile_number_field_instance_settings_form($field, $instance) {
     '#type' => 'textarea',
     '#title' => t('Verification Message'),
     '#default_value' => isset($settings['message']) ? $settings['message'] : MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-    '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled.'),
+    '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled, but be aware that entity values will not be available on entity creation forms as the entity was not created yet.'),
     '#required' => TRUE,
     '#token_types' => array($instance['entity_type']),
     '#element_validate' => array('token_element_validate'),
@@ -382,16 +381,16 @@ function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance
   $element += array(
     '#type' => 'mobile_number',
     '#description' => $element['#description'],
-    '#default_value' => isset($items[$delta]['value']) ? $items[$delta]['value'] : '',
+    '#default_value' => !empty($items[$delta]) ? $items[$delta] : array(),
     '#required' => $element['#required'],
-    '#default_country' => $settings['default_country'],
     '#allowed_countries' => $settings['countries'],
     '#verify' => mobile_number_sms_sending_is_enabled() ? $instance['settings']['verify'] : MOBILE_NUMBER_VERIFY_NONE,
     '#message' => $settings['message'],
-    '#verified' => !empty($items[$delta]['verified']) ? $items[$delta]['verified'] : FALSE,
-    '#tfa' => $instance['entity_type'] == 'user' && $tfa_field && $tfa_field == $field['field_name'] && $field['cardinality'] == 1 ? !empty($items[$delta]['tfa']) : NULL,
+    '#tfa' => $instance['entity_type'] == 'user' && $tfa_field && $tfa_field == $field['field_name'] && $field['cardinality'] == 1 ? TRUE : NULL,
     '#token_data' => !empty($form['#entity']) ? array($instance['entity_type'] => $form['#entity']) : array(),
   );
+
+  $element['#default_value'] += array('country' => $settings['default_country']);
 
   return $element;
 }
@@ -527,10 +526,8 @@ function mobile_number_element_info() {
       '#element_validate' => array('mobile_number_element_validate'),
       '#submit' => array('mobile_number_element_submit'),
       '#value_callback' => 'mobile_number_value_callback',
-      '#default_country' => 'US',
       '#allowed_countries' => array(),
       '#verify' => MOBILE_NUMBER_VERIFY_OPTIONAL,
-      '#verified' => FALSE,
       '#message' => MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
       '#tfa' => NULL,
       '#token_data' => array(),
@@ -542,21 +539,28 @@ function mobile_number_element_info() {
  * Mobile number element value callback.
  */
 function mobile_number_value_callback($element, $input = FALSE) {
+  $result = array();
   if ($input) {
     try {
-      $country = count($element['#allowed_countries']) == 1 ? key($element['#allowed_countries']) : $input['country-code'];
+      $country = !empty($input['country-code']) ? $input['country-code'] : (count($element['#allowed_countries']) == 1 ? key($element['#allowed_countries']) : NULL);
       $mobile_number = new MobileNumber($input['mobile'], $country);
-      $input = $mobile_number->callableNumber;
+      $result = array(
+        'value' => $mobile_number->callableNumber,
+        'country' => $mobile_number->country,
+        'local_number' => $mobile_number->localNumber,
+        'verified' => ($mobile_number->isVerified() || (!empty($element['#default_value']['verified']) && $mobile_number->callableNumber == $element['#default_value']['value'])) ? 1 : 0,
+        'tfa' => !empty($input['tfa']) ? 1 : 0,
+      );
     }
     catch (Exception $e) {
-      $input = '';
+      $result = array();
     }
   }
   else {
-    $input = !empty($element['#default_value']) ? $element['#default_value'] : '';
+    $result = !empty($element['#default_value']) ? $element['#default_value'] : array();
   }
 
-  return $input;
+  return $result;
 }
 
 /**
@@ -570,42 +574,58 @@ function mobile_number_element_process($element, &$form_state) {
   $id = $element['#id'];
   $element += array(
     '#allowed_countries' => array(),
-    '#default_country' => 'US',
+    '#default_value' => array(),
     '#verify' => mobile_number_sms_sending_is_enabled() ? MOBILE_NUMBER_VERIFY_OPTIONAL : MOBILE_NUMBER_VERIFY_NONE,
-    '#verified' => FALSE,
     '#message' => MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-    '#tfa' => NULL,
+    '#tfa' => FALSE,
     '#token_data' => array(),
   );
 
-  $value = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+  $element['#default_value'] += array(
+    'value' => '',
+    'country' => (count($element['#allowed_countries']) == 1) ? key($element['#allowed_countries']) : 'US',
+    'local_number' => '',
+    'verified' => 0,
+    'tfa' => 0,
+  );
+
+  try {
+    $default_mobile_number = new MobileNumber($element['#default_value']['value']);
+    $element['#default_value']['country'] = $default_mobile_number->country;
+  }
+  catch (Exception $e) {
+
+  }
+
+  $value = $element['#value'];
 
   $element['#prefix'] = "<div class=\"mobile-number-field form-item $field_name\" id=\"$id\">" . theme_form_element_label(array('element' => $element));
   $element['#suffix'] = '</div>';
 
   $mobile_number = NULL;
   $verified = FALSE;
-  $countries = MobileNumber::getCountryOptions($element['#allowed_countries']);
-  $is_one_country = count($element['#allowed_countries']) == 1;
-  $default_country = $is_one_country ? key($element['#allowed_countries']) : $element['#default_country'];
+  $countries = MobileNumber::getCountryOptions($element['#allowed_countries']) + MobileNumber::getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']));
+  $default_country = $element['#default_value']['country'];
 
-  if (is_array($value)) {
-    $value = mobile_number_value_callback($element, $value, $form_state);
+  if (!empty($value['value'])) {
+    try {
+      $mobile_number = new MobileNumber($value['value'], NULL);
+      $verified = $mobile_number->isVerified();
+      $default_country = $mobile_number->country;
+      $countries += MobileNumber::getCountryOptions(array($mobile_number->country => $mobile_number->country));
+    }
+    catch (Exception $e) {
+
+    }
   }
 
-  if ($value) {
-    $mobile_number = new MobileNumber($value, NULL);
-    $verified = $mobile_number->isVerified();
-    $default_country = $mobile_number->country;
-  }
-
-  $verified = $verified || ($element['#verified'] && !empty($element['#default_value']) && $value == $element['#default_value']);
+  $verified = $verified || (!empty($element['#default_value']['verified']) && !empty($value['value']) && $value['value'] == $element['#default_value']['value']);
 
   $element['country-code'] = array(
     '#type' => 'select',
-    '#options' => $countries + ($mobile_number ? MobileNumber::getCountryOptions(array($mobile_number->country => 1)) : array()),
+    '#options' => $countries,
     '#default_value' => $default_country,
-    '#access' => !$is_one_country,
+    '#access' => !(count($countries) == 1),
     '#attributes' => array('class' => array('country')),
     '#title' => t('Country Code'),
     '#title_display' => 'invisible',
@@ -633,10 +653,10 @@ function mobile_number_element_process($element, &$form_state) {
       '#ajax' => array(
         'callback' => 'mobile_number_verify_ajax',
         'wrapper' => $id,
-        'method' => 'replaceWith',
         'effect' => 'fade',
       ),
-      '#name' => 'mobile_number_send_verification',
+      '#name' => implode('__', $element['#parents']) . '__send_verification',
+      '#mobile_number_op' => 'mobile_number_send_verification',
       '#attributes' => array(
         'class' => array(
           !$verified ? 'show' : '',
@@ -660,14 +680,15 @@ function mobile_number_element_process($element, &$form_state) {
         'effect' => 'fade',
       ),
       '#suffix' => '</div>',
-      '#name' => 'mobile_number_verify',
+      '#name' => implode('__', $element['#parents']) . '__verify',
+      '#mobile_number_op' => 'mobile_number_verify',
     );
 
-    if ($element['#tfa'] !== NULL) {
+    if (!empty($element['#tfa'])) {
       $element['tfa'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable two-factor authentication'),
-        '#default_value' => $element['#tfa'],
+        '#default_value' => !empty($value['tfa']) ? 1 : 0,
         '#prefix' => '<div class="mobile-number-tfa">',
         '#suffix' => '</div>',
       );
@@ -682,7 +703,7 @@ function mobile_number_element_process($element, &$form_state) {
  */
 function mobile_number_element_validate($element, &$form_state) {
   $errors = array();
-  $op = $form_state['triggering_element']['#name'];
+  $op = !empty($form_state['triggering_element']['#mobile_number_op']) ? $form_state['triggering_element']['#mobile_number_op'] : NULL;
   if (!in_array($op, array(
     'mobile_number_send_verification',
     'mobile_number_verify',
@@ -692,50 +713,53 @@ function mobile_number_element_validate($element, &$form_state) {
   }
   $field_path = implode('][', $element['#parents']);
   $tree_parents = $element['#parents'];
-  $value = &drupal_array_get_nested_value($form_state['values'], $tree_parents);
+  $value = drupal_array_get_nested_value($form_state['values'], $tree_parents);
   $input = drupal_array_get_nested_value($form_state['input'], $tree_parents);
   $settings = !empty($element['#field_name']) ? $form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'] : array();
   $settings = $settings ? $settings + $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings'] : $settings;
   $input = $input ? $input : array();
-  $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
   $mobile_number = NULL;
   $countries = MobileNumber::getCountryOptions();
   $verified = FALSE;
-  try {
-    $mobile_number = new MobileNumber($input['mobile'], $input['country-code']);
-    $verified = $mobile_number->isVerified();
-  }
-  catch (Exception $e) {
-    switch ($e->getCode()) {
-      case MobileNumber::ERROR_NO_NUMBER:
-        if ($op) {
-          $errors[$field_path . '][number'] = t('Phone number in %field is required.', array(
+  if ($input) {
+    $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
+    try {
+      $mobile_number = new MobileNumber($input['mobile'], $input['country-code']);
+      $verified = $mobile_number->isVerified();
+    }
+    catch (Exception $e) {
+      switch ($e->getCode()) {
+        case MobileNumber::ERROR_NO_NUMBER:
+          if ($op) {
+            $errors[$field_path . '][mobile'] = t('Phone number in %field is required.', array(
+              '%field' => $element['#title'],
+            ));
+          }
+          break;
+
+        case MobileNumber::ERROR_INVLAID_NUMBER:
+        case MobileNumber::ERROR_WRONG_TYPE:
+          $errors[$field_path . '][mobile'] = t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
+            '%value' => $input['mobile'],
+            '%field' => $element['#title'],
+            '%country' => $countries[$input['country-code']],
+          ));
+
+          break;
+
+        case MobileNumber::ERROR_WRONG_COUNTRY:
+          $errors[$field_path . '][mobile'] = t('The country %value provided for %field does not match the mobile number prefix.', array(
+            '%value' => $countries[$input['country-code']],
             '%field' => $element['#title'],
           ));
-        }
-        break;
-
-      case MobileNumber::ERROR_INVLAID_NUMBER:
-      case MobileNumber::ERROR_WRONG_TYPE:
-        $errors[$field_path . '][mobile'] = t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
-          '%value' => $input['mobile'],
-          '%field' => $element['#title'],
-          '%country' => $countries[$input['country-code']],
-        ));
-
-        break;
-
-      case MobileNumber::ERROR_WRONG_COUNTRY:
-        $errors[$field_path . '][mobile'] = t('The country %value provided for %field does not match the mobile number.', array(
-          '%value' => $countries[$input['country-code']],
-          '%field' => $element['#title'],
-        ));
-        break;
+          break;
+      }
     }
   }
-  $verified = $verified || ($element['#verified'] && $mobile_number && !empty($element['#default_value']) && $mobile_number->callableNumber == $element['#default_value']);
 
-  if ($mobile_number && !$errors && !$verified) {
+  $verified = $verified || (!empty($element['#default_value']['verified']) && !empty($value['value']) && $value['value'] == $element['#default_value']['value']);
+
+  if ($mobile_number && !$errors) {
 
     if ($element['#allowed_countries'] && empty($element['#allowed_countries'][$mobile_number->country])) {
       $errors[$field_path . '][country-code'] = t('The country %value provided for %field is not an allowed country.', array(
@@ -769,7 +793,7 @@ function mobile_number_element_validate($element, &$form_state) {
     }
   }
 
-  if (!$op && !$errors && $mobile_number && $settings && $settings['unique'] && $mobile_number->callableNumber !== $element['#default_value']) {
+  if (!$op && !$errors && $mobile_number && $settings && $settings['unique'] && $mobile_number->callableNumber !== $element['#default_value']['value']) {
     $field_query = new EntityFieldQuery();
     $field_query->fieldCondition($element['#field_name'], 'value', $mobile_number->callableNumber);
 
@@ -800,24 +824,20 @@ function mobile_number_element_validate($element, &$form_state) {
     }
   }
 
-  if ($verification_prompt) {
+  if ($verification_prompt && $op) {
     drupal_add_js(array('mobileNumberVerificationPrompt' => $element['#id']), 'setting');
     $form_state['storage']['mobileNumberVerificationPrompt'][$field_path] = $element['#id'];
   }
+  else {
+    unset($form_state['storage']['mobileNumberVerificationPrompt'][$field_path]);
+  }
 
-  if ($verified) {
+  if ($verified && $op) {
     drupal_add_js(array('mobileNumberVerified' => $element['#id']), 'setting');
     $form_state['storage']['mobileNumberVerified'][$field_path] = $element['#id'];
   }
-
-  if ($mobile_number) {
-    form_set_value($element, array(
-      'value' => $mobile_number->callableNumber,
-      'country' => $mobile_number->country,
-      'local_number' => $mobile_number->localNumber,
-      'verified' => $verified ? 1 : 0,
-      'tfa' => !empty($input['tfa']) ? 1 : 0,
-    ), $form_state);
+  else {
+    unset($form_state['storage']['mobileNumberVerified'][$field_path]);
   }
 
   foreach ($errors as $field => $error) {
@@ -851,13 +871,11 @@ function mobile_number_verify_ajax($form, &$form_state) {
   $commands[] = ajax_command_replace(NULL, render($element));
 
   if (!empty($form_state['storage']['mobileNumberVerificationPrompt'][$field_path])) {
-    $commands[] = ajax_command_settings(array('mobileNumberVerificationPrompt' => $form_state['storage']['mobileNumberVerificationPrompt'][$field_path]));
-    unset($form_state['storage']['mobileNumberVerificationPrompt'][$field_path]);
+    $commands[] = ajax_command_settings(array('mobileNumberVerificationPrompt' => $element['#id']));
   }
 
   if (!empty($form_state['storage']['mobileNumberVerified'][$field_path])) {
-    $commands[] = ajax_command_settings(array('mobileNumberVerified' => $form_state['storage']['mobileNumberVerified'][$field_path]));
-    unset($form_state['storage']['mobileNumberVerified'][$field_path]);
+    $commands[] = ajax_command_settings(array('mobileNumberVerified' => $element['#id']));
   }
 
   return array(

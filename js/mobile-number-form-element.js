@@ -30,7 +30,6 @@
       });
 
       if (settings['mobileNumberVerificationPrompt']) {
-        console.log(context);
         $('#' + settings['mobileNumberVerificationPrompt'] + ' .verification').addClass('show');
       }
 

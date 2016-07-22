@@ -21,7 +21,6 @@ class MobileNumber implements MobileNumberInterface {
   const ERROR_WRONG_COUNTRY = 3;
   const ERROR_NO_NUMBER = 4;
   const VERIFY_WRONG_CODE = 1;
-  const VERIFY_TOO_MANY_ATTMEPTS = 2;
   const VERIFY_ATTEMPTS_INTERVAL = 3600;
 
   /**
