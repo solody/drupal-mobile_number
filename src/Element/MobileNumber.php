@@ -265,8 +265,14 @@ class MobileNumber extends FormElement {
     $tree_parents = $element['#parents'];
     $value = $element['#value'];
     $input = NestedArray::getValue($form_state->getUserInput(), $tree_parents);
-    $settings = !empty($element['#field_name']) ? $form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'] : array();
-    $settings = $settings ? $settings + $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings'] : $settings;
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $form_state->getFormObject()->getEntity();
+    $settings = array();
+    if($entity) {
+      $entity_type = $entity->getEntityTypeId();
+      $field_name = $element['#parents'][0];
+      $settings = $entity->getFieldDefinition($field_name)->getSettings();
+    }
     $input = $input ? $input : array();
     $mobile_number = NULL;
     $countries = $util->getCountryOptions();
@@ -342,12 +348,14 @@ class MobileNumber extends FormElement {
         ));
       }
       elseif (!$op && !empty($settings['unique']) && $util->getCallableNumber($mobile_number) !== $element['#default_value']['value']) {
+        $entity_type = $entity->getEntityTypeId();
+        $field_name = $element['#parents'][0];
 
-        $field_query = \Drupal::entityQuery($element['#entity_type']);
-        $field_query->condition($element['#field_name'] . '.value', $util->getCallableNumber($mobile_number));
+        $field_query = \Drupal::entityQuery($entity_type);
+        $field_query->condition($field_name . '.value', $util->getCallableNumber($mobile_number));
 
-        if ($settings['unique'] == 2) {
-          $field_query->condition($element['#field_name'] . '.verified', 1);
+        if ($settings['unique'] == $util::MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
+          $field_query->condition($field_name . '.verified', 1);
         }
 
         $result = $field_query->execute();
