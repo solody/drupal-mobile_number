@@ -11,8 +11,8 @@
  * Only one sms callback can be defined and it's with this hook.
  *
  * The callback gets the arguments:
- * - $phone_number (international format)
- * - $message
+ * - $phone_number (string, international format)
+ * - $message (string)
  *
  * If an sms module has a function with these two needed arguments, then here is
  * where it should be defined, otherwise a wrapper function can be used.
@@ -20,6 +20,6 @@
  * @param string $send_sms_callback
  *   Defaults to 'sms_send' if the SMS Framework module  is enabled.
  */
-function hook_mobile_mobile_number_send_sms_callback_alter(&$send_sms_callback) {
+function hook_mobile_number_send_sms_callback_alter(&$send_sms_callback) {
   $send_sms_callback = 'my_sms_callback';
 }
