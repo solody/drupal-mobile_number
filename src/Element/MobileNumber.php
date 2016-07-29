@@ -2,6 +2,7 @@
 
 namespace Drupal\mobile_number\Element;
 
+use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\mobile_number\Exception\MobileNumberException;
@@ -266,9 +267,10 @@ class MobileNumber extends FormElement {
     $value = $element['#value'];
     $input = NestedArray::getValue($form_state->getUserInput(), $tree_parents);
     /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $entity = $form_state->getFormObject()->getEntity();
+    $form_object = $form_state->getFormObject();
     $settings = array();
-    if($entity) {
+    if($form_object instanceof \Drupal\Core\Entity\ContentEntityForm) {
+      $entity = $form_object->getEntity();
       $entity_type = $entity->getEntityTypeId();
       $field_name = $element['#parents'][0];
       $settings = $entity->getFieldDefinition($field_name)->getSettings();
@@ -348,7 +350,7 @@ class MobileNumber extends FormElement {
         ));
       }
       elseif (!$op && !empty($settings['unique']) && $util->getCallableNumber($mobile_number) !== $element['#default_value']['value']) {
-        $entity_type = $entity->getEntityTypeId();
+        $entity_type = $form_object->getEntity()->getEntityTypeId();
         $field_name = $element['#parents'][0];
 
         $field_query = \Drupal::entityQuery($entity_type);
