@@ -2,7 +2,6 @@
 
 namespace Drupal\mobile_number\Element;
 
-use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\mobile_number\Exception\MobileNumberException;

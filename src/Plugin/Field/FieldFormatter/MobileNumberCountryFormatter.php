@@ -60,14 +60,14 @@ class MobileNumberCountryFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element = array();
     $settings = $this->getSettings();
 
     foreach ($items as $delta => $item) {
-      /** @var MobileNumberItemInterface $item */
-      if ($mobile_number = $util->getMobileNumber($item->value)) {
+      /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
+      if ($mobile_number = $util->getMobileNumber($item->getValue())) {
         if ($settings['type'] == 'code') {
           $element[$delta] = array(
             '#plain_text' => $util->getCountry($mobile_number),

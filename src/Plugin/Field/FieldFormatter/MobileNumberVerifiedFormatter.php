@@ -23,13 +23,13 @@ class MobileNumberVerifiedFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element = array();
 
     foreach ($items as $delta => $item) {
-      /** @var MobileNumberItemInterface $item */
-      if ($mobile_number = $util->getMobileNumber($item->value)) {
+      /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
+      if ($mobile_number = $util->getMobileNumber($item->getValue())) {
         $element[$delta] = array(
           '#plain_text' => !empty($item->verified) ? (string) t('Verified') : (string) t('Not verified'),
         );

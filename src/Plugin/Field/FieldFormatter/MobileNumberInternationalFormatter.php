@@ -58,24 +58,24 @@ class MobileNumberInternationalFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element = array();
     $settings = $this->getSettings();
 
     foreach ($items as $delta => $item) {
-      /** @var MobileNumberItemInterface $item */
-      if ($mobile_number = $util->getMobileNumber($item->value)) {
+      /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
+      if ($mobile_number = $util->getMobileNumber($item->getValue())) {
         if (!empty($settings['as_link'])) {
           $element[$delta] = array(
             '#type' => 'link',
-            '#title' => $util->libUtil->format($mobile_number, $this->phoneDisplayFormat),
+            '#title' => $util->libUtil()->format($mobile_number, $this->phoneDisplayFormat),
             '#href' => "tel:" . $util->getCallableNumber($mobile_number),
           );
         }
         else {
           $element[$delta] = array(
-            '#plain_text' => $util->libUtil->format($mobile_number, $this->phoneDisplayFormat),
+            '#plain_text' => $util->libUtil()->format($mobile_number, $this->phoneDisplayFormat),
           );
         }
       }
