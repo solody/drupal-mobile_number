@@ -99,7 +99,7 @@ class MobileNumber implements MobileNumberInterface {
 
     $country_prefix = $this->libUtil->getCountryCodeForRegion($this->country);
 
-    $this->callableNumber = "+$country_prefix$national_number";
+    $this->callableNumber = $this->libUtil->format($phone_number, \libphonenumber\PhoneNumberFormat::E164);
     $this->libPhoneNumber = $phone_number;
     $this->verificationToken = '';
 

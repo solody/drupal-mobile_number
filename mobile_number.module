@@ -137,16 +137,18 @@ function mobile_number_field_instance_settings_form($field, $instance) {
     '#default_value' => isset($settings['message']) ? $settings['message'] : MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
     '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled, but be aware that entity values will not be available on entity creation forms as the entity was not created yet.'),
     '#required' => TRUE,
-    '#token_types' => array($instance['entity_type']),
-    '#element_validate' => array('token_element_validate'),
     '#disabled' => !mobile_number_sms_sending_is_enabled(),
   );
 
-  $form['message_token_tree']['token_tree'] = array(
-    '#theme' => 'token_tree',
-    '#token_types' => array($instance['entity_type']),
-    '#dialog' => TRUE,
-  );
+  if(module_exists('token')) {
+    $form['message']['#element_validate'] = array('token_element_validate');
+    $form['message']['#token_types'] = array($instance['entity_type']);
+    $form['message_token_tree']['token_tree'] = array(
+      '#theme' => 'token_tree',
+      '#token_types' => array($instance['entity_type']),
+      '#dialog' => TRUE,
+    );
+  }
 
   return $form;
 }
@@ -382,7 +384,6 @@ function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance
     '#type' => 'mobile_number',
     '#description' => $element['#description'],
     '#default_value' => !empty($items[$delta]) ? $items[$delta] : array(),
-    '#required' => $element['#required'],
     '#allowed_countries' => $settings['countries'],
     '#verify' => mobile_number_sms_sending_is_enabled() ? $instance['settings']['verify'] : MOBILE_NUMBER_VERIFY_NONE,
     '#message' => $settings['message'],
@@ -704,9 +705,12 @@ function mobile_number_element_process($element, &$form_state) {
 function mobile_number_element_validate($element, &$form_state) {
   $errors = array();
   $op = !empty($form_state['triggering_element']['#mobile_number_op']) ? $form_state['triggering_element']['#mobile_number_op'] : NULL;
-  if (!in_array($op, array(
-    'mobile_number_send_verification',
-    'mobile_number_verify',
+  $button = !empty($form_state['triggering_element']['#name']) ? $form_state['triggering_element']['#name'] : NULL;
+  $field_label = !empty($element['#title']) ? $element['#title'] : t('Mobile Number');
+
+  if (!in_array($button, array(
+    implode('__', $element['#parents']) . '__send_verification',
+    implode('__', $element['#parents']) . '__verify',
   ))
   ) {
     $op = NULL;
@@ -732,7 +736,7 @@ function mobile_number_element_validate($element, &$form_state) {
         case MobileNumber::ERROR_NO_NUMBER:
           if ($op) {
             $errors[$field_path . '][mobile'] = t('Phone number in %field is required.', array(
-              '%field' => $element['#title'],
+              '%field' => $field_label,
             ));
           }
           break;
@@ -741,7 +745,7 @@ function mobile_number_element_validate($element, &$form_state) {
         case MobileNumber::ERROR_WRONG_TYPE:
           $errors[$field_path . '][mobile'] = t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
             '%value' => $input['mobile'],
-            '%field' => $element['#title'],
+            '%field' => $field_label,
             '%country' => $countries[$input['country-code']],
           ));
 
@@ -750,7 +754,7 @@ function mobile_number_element_validate($element, &$form_state) {
         case MobileNumber::ERROR_WRONG_COUNTRY:
           $errors[$field_path . '][mobile'] = t('The country %value provided for %field does not match the mobile number prefix.', array(
             '%value' => $countries[$input['country-code']],
-            '%field' => $element['#title'],
+            '%field' => $field_label,
           ));
           break;
       }
@@ -764,31 +768,31 @@ function mobile_number_element_validate($element, &$form_state) {
     if ($element['#allowed_countries'] && empty($element['#allowed_countries'][$mobile_number->country])) {
       $errors[$field_path . '][country-code'] = t('The country %value provided for %field is not an allowed country.', array(
         '%value' => $countries[$mobile_number->country],
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
     elseif ($op && !$mobile_number->checkFlood()) {
       $errors[$field_path . '][verification_code'] = t('Too many validation attempts for %field, please try again in a few hours.', array(
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
-    elseif ($op == 'mobile_number_send_verification' && !$mobile_number->sendVerification($element['#message'], $mobile_number->generateVerificationCode(), $element['#token_data'])
+    elseif ($op == 'mobile_number_send_verification' && !$verified && !$mobile_number->sendVerification($element['#message'], $mobile_number->generateVerificationCode(), $element['#token_data'])
     ) {
       $errors[NULL] = t('An error occurred while sending sms.');
     }
     elseif ($op == 'mobile_number_verify' && !$verified = $mobile_number->verifyCode($input['verification_code'])) {
       $errors[$field_path . '][verification_code'] = t('Invalid verification code for %field.', array(
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
     elseif (!$op && $element['#verify'] == MOBILE_NUMBER_VERIFY_REQUIRED && !$mobile_number->isVerified()) {
       $errors[$field_path . '][mobile'] = t('%field verification is required.', array(
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
     elseif (!$op && !empty($input['tfa']) && !$verified) {
       $errors[$field_path . '][tfa'] = t('%field verification is required for enabling two-factor authentication.', array(
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
   }
@@ -805,7 +809,7 @@ function mobile_number_element_validate($element, &$form_state) {
 
     if ($result) {
       $errors[$field_path . '][mobile'] = t('The number for %field already exists. It must be unique.', array(
-        '%field' => $element['#title'],
+        '%field' => $field_label,
       ));
     }
   }
@@ -867,6 +871,7 @@ function mobile_number_verify_ajax($form, &$form_state) {
   }
 
   $element['messages'] = array('#markup' => theme('status_messages'));
+  unset($element['_weight']);
   $commands = array();
   $commands[] = ajax_command_replace(NULL, render($element));
 
