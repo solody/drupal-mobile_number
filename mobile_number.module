@@ -785,7 +785,7 @@ function mobile_number_element_validate($element, &$form_state) {
         '%field' => $field_label,
       ));
     }
-    elseif (!$op && !$verified && $element['#verify'] == MOBILE_NUMBER_VERIFY_REQUIRED && !$mobile_number->isVerified()) {
+    elseif (!$op && !$verified && $element['#verify'] == MOBILE_NUMBER_VERIFY_REQUIRED) {
       $errors[$field_path . '][mobile'] = t('%field verification is required.', array(
         '%field' => $field_label,
       ));
