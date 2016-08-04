@@ -100,7 +100,7 @@ function mobile_number_field_instance_settings_form($field, $instance) {
   $form['default_country'] = array(
     '#type' => 'select',
     '#title' => t('Default Country'),
-    '#options' => MobileNumber::getCountryOptions(),
+    '#options' => MobileNumber::getCountryOptions(array(), TRUE),
     '#default_value' => !empty($settings['default_country']) ? $settings['default_country'] : 'US',
     '#description' => t('Default country for mobile number input.'),
     '#required' => TRUE,
@@ -389,6 +389,7 @@ function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance
     '#message' => $settings['message'],
     '#tfa' => $instance['entity_type'] == 'user' && $tfa_field && $tfa_field == $field['field_name'] && $field['cardinality'] == 1 ? TRUE : NULL,
     '#token_data' => !empty($form['#entity']) ? array($instance['entity_type'] => $form['#entity']) : array(),
+    '#field_title' => $instance['label'],
   );
 
   $element['#default_value'] += array('country' => $settings['default_country']);
@@ -605,7 +606,8 @@ function mobile_number_element_process($element, &$form_state) {
 
   $mobile_number = NULL;
   $verified = FALSE;
-  $countries = MobileNumber::getCountryOptions($element['#allowed_countries']) + MobileNumber::getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']));
+  $countries = MobileNumber::getCountryOptions($element['#allowed_countries'], TRUE);
+  $countries += MobileNumber::getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']), TRUE);
   $default_country = $element['#default_value']['country'];
 
   if (!empty($value['value'])) {
@@ -645,6 +647,7 @@ function mobile_number_element_process($element, &$form_state) {
   );
 
   $element['mobile']['#attached']['css'][] = drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css';
+  $element['mobile']['#attached']['css'][] = drupal_get_path('module', 'mobile_number') . '/css/mobile-number-flags.css';
   $element['mobile']['#attached']['js'][] = drupal_get_path('module', 'mobile_number') . '/js/mobile-number-form-element.js';
 
   if ($element['#verify'] != MOBILE_NUMBER_VERIFY_NONE) {
@@ -706,7 +709,7 @@ function mobile_number_element_validate($element, &$form_state) {
   $errors = array();
   $op = !empty($form_state['triggering_element']['#mobile_number_op']) ? $form_state['triggering_element']['#mobile_number_op'] : NULL;
   $button = !empty($form_state['triggering_element']['#name']) ? $form_state['triggering_element']['#name'] : NULL;
-  $field_label = !empty($element['#title']) ? $element['#title'] : t('Mobile Number');
+  $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
 
   if (!in_array($button, array(
     implode('__', $element['#parents']) . '__send_verification',
@@ -723,7 +726,7 @@ function mobile_number_element_validate($element, &$form_state) {
   $settings = $settings ? $settings + $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings'] : $settings;
   $input = $input ? $input : array();
   $mobile_number = NULL;
-  $countries = MobileNumber::getCountryOptions();
+  $countries = MobileNumber::getCountryOptions(array(), TRUE);
   $verified = FALSE;
   if ($input) {
     $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
