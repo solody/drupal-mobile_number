@@ -32,6 +32,19 @@ function mobile_number_form_alter($form, $form_state) {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function mobile_number_permission() {
+  return array(
+    'bypass mobile number verification requirement' => array(
+      'title' => t('Bypass mobile number verification requirement'),
+      'description' => t('Allow saving unverified numbers when verification is required.'),
+      'restrict access' => TRUE,
+    ),
+  );
+}
+
+/**
  * @defgroup field_api_hooks Field API Hook Implementations
  */
 
@@ -788,7 +801,7 @@ function mobile_number_element_validate($element, &$form_state) {
         '%field' => $field_label,
       ));
     }
-    elseif (!$op && !$verified && $element['#verify'] == MOBILE_NUMBER_VERIFY_REQUIRED) {
+    elseif (!$op && !$verified && $element['#verify'] == MOBILE_NUMBER_VERIFY_REQUIRED && !user_access('bypass mobile number verification requirement')) {
       $errors[$field_path . '][mobile'] = t('%field verification is required.', array(
         '%field' => $field_label,
       ));
