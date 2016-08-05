@@ -87,7 +87,7 @@ function mobile_number_property_callback(&$info, $entity_type, $field, $instance
   $property['setter callback'] = 'entity_metadata_field_verbatim_set';
   unset($property['query callback']);
   $property['type'] = ($field['cardinality'] != 1) ? 'list' : 'text';
-  
+
   $property['property info'] = array(
     'value' => array(
       'type' => 'text',
@@ -419,7 +419,7 @@ function mobile_number_field_formatter_view($entity_type, $entity, $field, $inst
           case 'mobile_number_verified':
             $output = array(
               '#type' => 'markup',
-              '#markup' => check_plain(!empty($item['verified']) ? t('Verified') : t('Not verified')),
+              '#markup' => '<span class="verified-status ' . (!empty($item['verified']) ? 'verified' : '')  . '">' . check_plain(!empty($item['verified']) ? t('Verified') : t('Not verified')) . '</span>',
             );
             break;
         }
