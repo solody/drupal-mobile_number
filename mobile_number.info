@@ -2,10 +2,10 @@ name = Mobile Number
 description = Mobile number field with sms verification.
 core = 7.x
 
+files[] = include/mobile_number.libphonenumber.inc
 files[] = src/MobileNumberInterface.php
 files[] = src/MobileNumber.php
 files[] = src/MobileNumberTfa.php
 files[] = mobile_number.feeds.inc
-files[] = mobile_number.webform.inc
 
 dependencies[] = 'libraries'

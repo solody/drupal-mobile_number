@@ -5,8 +5,6 @@
  * mobile_number.module
  */
 
-require_once drupal_get_path('module', 'mobile_number') . '/autoload.php';
-
 define('MOBILE_NUMBER_VERIFY_NONE', 'none');
 define('MOBILE_NUMBER_VERIFY_OPTIONAL', 'optional');
 define('MOBILE_NUMBER_VERIFY_REQUIRED', 'required');
@@ -1016,7 +1014,7 @@ function mobile_number_webform_component_info() {
       'spam_analysis' => FALSE,
       'attachment' => FALSE,
     ),
-    'file' => 'mobile_number.webform.inc',
+    'file' => 'components/mobile_number.inc',
   );
   return $components;
 }

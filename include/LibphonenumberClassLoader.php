@@ -10,8 +10,6 @@
  * file that was distributed with this source code.
  */
 
-namespace Composer\Autoload;
-
 /**
  * ClassLoader implements a PSR-0, PSR-4 and classmap class loader.
  *
@@ -41,7 +39,7 @@ namespace Composer\Autoload;
  * @see http://www.php-fig.org/psr/psr-0/
  * @see http://www.php-fig.org/psr/psr-4/
  */
-class ClassLoader {
+class LibphonenumberClassLoader {
   // PSR-4.
   private $prefixLengthsPsr4 = array();
   private $prefixDirsPsr4 = array();

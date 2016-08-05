@@ -7,6 +7,8 @@
 
 use libphonenumber\PhoneNumberUtil;
 
+require_once drupal_get_path('module', 'mobile_number') . '/include/mobile_number.libphonenumber.inc';
+
 /**
  * Class MobileNumber handles mobile number validation and verification.
  *
@@ -131,7 +133,6 @@ class MobileNumber implements MobileNumberInterface {
    * @inheritdoc
    */
   public static function getCountryCode($country) {
-    require_once drupal_get_path('module', 'mobile_number') . '/autoload.php';
     $libUtil = PhoneNumberUtil::getInstance();
     return $libUtil->getCountryCodeForRegion($country);
   }
@@ -140,8 +141,6 @@ class MobileNumber implements MobileNumberInterface {
    * @inheritdoc
    */
   public static function getCountryOptions($filter = array(), $show_country_names = FALSE) {
-    require_once drupal_get_path('module', 'mobile_number') . '/autoload.php';
-
     $libUtil = PhoneNumberUtil::getInstance();
     $regions = $libUtil->getSupportedRegions();
     $countries = array();
