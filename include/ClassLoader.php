@@ -1,5 +1,7 @@
 <?php
 
+namespace mobile_number;
+
 /*
  * This file is part of Composer.
  *
@@ -39,7 +41,7 @@
  * @see http://www.php-fig.org/psr/psr-0/
  * @see http://www.php-fig.org/psr/psr-4/
  */
-class LibphonenumberClassLoader {
+class ClassLoader {
   // PSR-4.
   private $prefixLengthsPsr4 = array();
   private $prefixDirsPsr4 = array();

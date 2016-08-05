@@ -5,10 +5,16 @@
  * mobile_number.libphonenumber.inc.
  */
 
-require __DIR__ . '/LibphonenumberClassLoader.php';
+require __DIR__ . '/ClassLoader.php';
 
-$loader = new LibphonenumberClassLoader();
-$loader->set('libphonenumber', array(libraries_get_path('libphonenumber') . '/src'));
-$loader->register(TRUE);
+class MobileNumberAutoload {
+  static function load() {
+    $ClassLoader = new mobile_number\ClassLoader();
+    $ClassLoader->set('libphonenumber', array(libraries_get_path('libphonenumber') . '/src'));
+    $ClassLoader->register(TRUE);
 
-return $loader;
+    return $ClassLoader;
+  }
+}
+
+return MobileNumberAutoload::load();
