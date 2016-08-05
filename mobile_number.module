@@ -62,7 +62,7 @@ function mobile_number_field_info() {
       'instance_settings' => array(
         'default_country' => 'US',
         'countries' => array(),
-        'verify' => 'optional',
+        'verify' => MOBILE_NUMBER_VERIFY_OPTIONAL,
         'message' => MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
       ),
       'default_widget' => 'mobile_number_default',
@@ -453,7 +453,6 @@ function mobile_number_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  global $user;
   $settings = $instance['settings'];
   $tfa_field = variable_get('mobile_number_tfa_field', '');
 
@@ -996,4 +995,28 @@ function mobile_number_sms_sending_is_enabled() {
   drupal_alter('mobile_number_send_sms_callback', $send_sms_callback);
 
   return $send_sms_callback ? TRUE : FALSE;
+}
+
+/**
+ * Implements hook_webform_component_info().
+ */
+function mobile_number_webform_component_info() {
+  $components = array();
+  $components['mobile_number'] = array(
+    'label' => t('Mobile Number'),
+    'description' => t('Mobile number.'),
+    'features' => array(
+      'csv' => TRUE,
+      'email' => TRUE,
+      'email_address' => FALSE,
+      'email_name' => FALSE,
+      'required' => TRUE,
+      'conditional' => FALSE,
+      'group' => FALSE,
+      'spam_analysis' => FALSE,
+      'attachment' => FALSE,
+    ),
+    'file' => 'mobile_number.webform.inc',
+  );
+  return $components;
 }
