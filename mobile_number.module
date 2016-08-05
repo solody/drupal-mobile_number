@@ -67,8 +67,74 @@ function mobile_number_field_info() {
       ),
       'default_widget' => 'mobile_number_default',
       'default_formatter' => 'mobile_number_default',
+      'property_type' => 'mobile_number',
+      'property_callbacks' => array('mobile_number_property_callback'),
     ),
   );
+}
+
+/**
+ * Additional callback to adapt the property info for mobile number fields.
+ *
+ * @see entity_metadata_field_entity_property_info()
+ * @see entity_field_info_alter()
+ */
+function mobile_number_property_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  // Define a data structure for dealing with mobile number fields
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
+
+  $property['getter callback'] = 'entity_metadata_field_verbatim_get';
+  $property['setter callback'] = 'entity_metadata_field_verbatim_set';
+  unset($property['query callback']);
+  $property['type'] = ($field['cardinality'] != 1) ? 'list' : 'text';
+  
+  $property['property info'] = array(
+    'value' => array(
+      'type' => 'text',
+      'label' => t('International Number'),
+      'sanitized' => TRUE,
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+      'raw getter callback' => 'entity_property_verbatim_get',
+    ),
+    'country' => array(
+      'type' => 'text',
+      'label' => t('Country'),
+      'sanitized' => TRUE,
+      'options list' => 'mobile_number_property_country_options',
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+      'raw getter callback' => 'entity_property_verbatim_get',
+    ),
+    'local_number' => array(
+      'type' => 'text',
+      'label' => t('Local Number'),
+      'sanitized' => TRUE,
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+      'raw getter callback' => 'entity_property_verbatim_get',
+    ),
+    'verified' => array(
+      'type' => 'boolean',
+      'label' => t('Verified'),
+      'sanitized' => TRUE,
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+      'raw getter callback' => 'entity_property_verbatim_get',
+    ),
+    'tfa' => array(
+      'type' => 'boolean',
+      'label' => t('TFA'),
+      'sanitized' => TRUE,
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+      'raw getter callback' => 'entity_property_verbatim_get',
+    ),
+  );
+
+  // Enable auto-creation of the item, so that it is possible to just set
+  // the textual or summary value.
+  $property['auto creation'] = 'entity_property_create_array';
 }
 
 /**
@@ -153,7 +219,7 @@ function mobile_number_field_instance_settings_form($field, $instance) {
     '#disabled' => !mobile_number_sms_sending_is_enabled(),
   );
 
-  if(module_exists('token')) {
+  if (module_exists('token')) {
     $form['message']['#element_validate'] = array('token_element_validate');
     $form['message']['#token_types'] = array($instance['entity_type']);
     $form['message_token_tree']['token_tree'] = array(
@@ -189,8 +255,7 @@ function mobile_number_field_presave($entity_type, $entity, $field, $instance, $
         $items[$delta]['country'] = $mobile_number->country;
         $items[$delta]['local_number'] = $mobile_number->localNumber;
         $items[$delta]['tfa'] = !empty($item['tfa']) ? 1 : 0;
-      }
-      catch (Exception $e) {
+      } catch (Exception $e) {
         unset($items[$delta]);
       }
     }
@@ -358,8 +423,7 @@ function mobile_number_field_formatter_view($entity_type, $entity, $field, $inst
             );
             break;
         }
-      }
-      catch (Exception $e) {
+      } catch (Exception $e) {
         $output = array(
           '#markup' => t('Invalid number'),
         );
@@ -454,7 +518,8 @@ function mobile_number_tfa_account_number($uid) {
     variable_get('tfa_enabled', FALSE) &&
     $field_name &&
     !empty($user->{$field_name}['und'][0]['value']) &&
-    !empty($user->{$field_name}['und'][0]['tfa'])) {
+    !empty($user->{$field_name}['und'][0]['tfa'])
+  ) {
     return $user->{$field_name}['und'][0]['value'];
   }
   return '';
@@ -531,6 +596,13 @@ function mobile_number_views_country_options($allowed_countries = array()) {
 }
 
 /**
+ * Helper function for get all supported countries for entity field country property.
+ */
+function mobile_number_property_country_options($name, $info, $op) {
+  return MobileNumber::getCountryOptions(array(), TRUE);
+}
+
+/**
  * Implements hook_element_info().
  */
 function mobile_number_element_info() {
@@ -566,8 +638,7 @@ function mobile_number_value_callback($element, $input = FALSE) {
         'verified' => ($mobile_number->isVerified() || (!empty($element['#default_value']['verified']) && $mobile_number->callableNumber == $element['#default_value']['value'])) ? 1 : 0,
         'tfa' => !empty($input['tfa']) ? 1 : 0,
       );
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
       $result = array();
     }
   }
@@ -607,8 +678,7 @@ function mobile_number_element_process($element, &$form_state) {
   try {
     $default_mobile_number = new MobileNumber($element['#default_value']['value']);
     $element['#default_value']['country'] = $default_mobile_number->country;
-  }
-  catch (Exception $e) {
+  } catch (Exception $e) {
 
   }
 
@@ -629,8 +699,7 @@ function mobile_number_element_process($element, &$form_state) {
       $verified = $mobile_number->isVerified();
       $default_country = $mobile_number->country;
       $countries += MobileNumber::getCountryOptions(array($mobile_number->country => $mobile_number->country));
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
 
     }
   }
@@ -746,8 +815,7 @@ function mobile_number_element_validate($element, &$form_state) {
     try {
       $mobile_number = new MobileNumber($input['mobile'], $input['country-code']);
       $verified = $mobile_number->isVerified();
-    }
-    catch (Exception $e) {
+    } catch (Exception $e) {
       switch ($e->getCode()) {
         case MobileNumber::ERROR_NO_NUMBER:
           if ($op) {

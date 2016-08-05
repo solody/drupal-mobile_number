@@ -18,7 +18,6 @@
       });
 
       $('.mobile-number-field .country', context).once('field-setup', function() {
-        console.log(this);
         var $input = $(this);
         var val = $input.val();
         $input.data('value', val);
