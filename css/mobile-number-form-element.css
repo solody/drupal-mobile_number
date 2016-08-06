@@ -23,23 +23,19 @@ div.mobile-number-field div.form-item {
   margin: 0;
 }
 
-.mobile-number-field .mobile-number-flag {
-  background-size: 5630px 15px
-}
-
 
 .mobile-number-field .mobile-number-flag {
   box-sizing: border-box;
   padding: 9px 0px 0px;
-  padding-left: 20px;
+  padding-left: 16px;
   width: 0;
-  height: 30px;
+  height: 11px;
   background-image: url("../images/flags.png");
   background-repeat: no-repeat;
   background-color: transparent;
-  background-position: 20px 0;
+  background-position: 0;
   display:inline-block;
-  margin: 0 auto;
+  margin: 10px auto;
   vertical-align: bottom;
 }
 
