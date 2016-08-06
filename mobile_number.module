@@ -779,7 +779,7 @@ function mobile_number_element_process($element, &$form_state) {
   }
 
   if(!empty($element['#description'])) {
-    $element['decscription']['#markup'] = '<div class="description">' . $element['#description'] . '</div>';
+    $element['description']['#markup'] = '<div class="description">' . $element['#description'] . '</div>';
   }
 
   return $element;
