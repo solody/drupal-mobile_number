@@ -20,9 +20,9 @@ function _webform_defaults_mobile_number() {
 
 function _webform_edit_mobile_number($component) {
   $instance['entity_type'] = 'node';
-  $instance['settings'] = $component['extra'];
-  $form['extra'] = mobile_number_field_instance_settings_form(NULL, $instance);
-  unset($form['extra']['default_country']['#element_validate']);
+  $instance['widget']['settings'] = $component['extra'];
+  $field['type'] = 'mobile_number';
+  $form['extra'] = mobile_number_field_widget_settings_form($field, $instance);
   return $form;
 }
 

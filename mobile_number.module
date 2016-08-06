@@ -57,12 +57,7 @@ function mobile_number_field_info() {
       'settings' => array(
         'unique' => MOBILE_NUMBER_UNIQUE_NO,
       ),
-      'instance_settings' => array(
-        'default_country' => 'US',
-        'countries' => array(),
-        'verify' => MOBILE_NUMBER_VERIFY_OPTIONAL,
-        'message' => MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-      ),
+      'instance_settings' => array(),
       'default_widget' => 'mobile_number_default',
       'default_formatter' => 'mobile_number_default',
       'property_type' => 'mobile_number',
@@ -167,82 +162,6 @@ function mobile_number_field_settings_form($field, $instance, $has_data) {
 }
 
 /**
- * Implements hook_field_settings_form().
- */
-function mobile_number_field_instance_settings_form($field, $instance) {
-  $settings = $instance['settings'];
-
-  $form = array();
-
-  $form['default_country'] = array(
-    '#type' => 'select',
-    '#title' => t('Default Country'),
-    '#options' => MobileNumber::getCountryOptions(array(), TRUE),
-    '#default_value' => !empty($settings['default_country']) ? $settings['default_country'] : 'US',
-    '#description' => t('Default country for mobile number input.'),
-    '#required' => TRUE,
-    '#element_validate' => array('mobile_number_field_instance_settings_validate'),
-  );
-
-  $form['countries'] = array(
-    '#type' => 'select',
-    '#title' => t('Allowed Countries'),
-    '#options' => MobileNumber::getCountryOptions(array(), TRUE),
-    '#default_value' => !empty($settings['countries']) ? $settings['countries'] : NULL,
-    '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
-    '#multiple' => TRUE,
-    '#attached' => array('css' => array(drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css')),
-  );
-
-  $form['verify'] = array(
-    '#type' => 'radios',
-    '#title' => t('Verification'),
-    '#options' => array(
-      MOBILE_NUMBER_VERIFY_NONE => t('None'),
-      MOBILE_NUMBER_VERIFY_OPTIONAL => t('Optional'),
-      MOBILE_NUMBER_VERIFY_REQUIRED => t('Required'),
-    ),
-    '#default_value' => !empty($settings['verify']) ? $settings['verify'] : MOBILE_NUMBER_VERIFY_NONE,
-    '#description' => t('Verification requirement. Will send sms to mobile number when user requests to verify the number as their own. Requires <a href="https://www.drupal.org/project/smsframework" target="_blank">SMS Framework</a> or any other sms sending module that integrates with with the Mobile Number module.'),
-    '#required' => TRUE,
-    '#disabled' => !mobile_number_sms_sending_is_enabled(),
-  );
-
-  $form['message'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Verification Message'),
-    '#default_value' => isset($settings['message']) ? $settings['message'] : MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-    '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled, but be aware that entity values will not be available on entity creation forms as the entity was not created yet.'),
-    '#required' => TRUE,
-    '#disabled' => !mobile_number_sms_sending_is_enabled(),
-  );
-
-  if (module_exists('token')) {
-    $form['message']['#element_validate'] = array('token_element_validate');
-    $form['message']['#token_types'] = array($instance['entity_type']);
-    $form['message_token_tree']['token_tree'] = array(
-      '#theme' => 'token_tree',
-      '#token_types' => array($instance['entity_type']),
-      '#dialog' => TRUE,
-    );
-  }
-
-  return $form;
-}
-
-/**
- * Field instance settings validate callback.
- */
-function mobile_number_field_instance_settings_validate($element, &$form_state) {
-  t($form_state['values']['instance']['settings']['message']);
-  $default_country = $form_state['values']['instance']['settings']['default_country'];
-  $allowed_countries = $form_state['values']['instance']['settings']['countries'];
-  if (!empty($allowed_countries) && empty($allowed_countries[$default_country])) {
-    form_error($element, t('Default country is not in one of the allowed countries.'));
-  }
-}
-
-/**
  * Implements hook_field_presave().
  */
 function mobile_number_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
@@ -267,17 +186,17 @@ function mobile_number_field_formatter_info() {
   return array(
     'mobile_number_international' => array(
       'label' => t('International Number'),
-      'field types' => array('mobile_number'),
+      'field types' => array('mobile_number', 'telephone'),
       'settings' => array('as_link' => FALSE),
     ),
     'mobile_number_country' => array(
       'label' => t('Country'),
-      'field types' => array('mobile_number'),
+      'field types' => array('mobile_number', 'telephone'),
       'settings' => array('type' => 'name'),
     ),
     'mobile_number_local' => array(
       'label' => t('Local Number'),
-      'field types' => array('mobile_number'),
+      'field types' => array('mobile_number', 'telephone'),
       'settings' => array('as_link' => FALSE),
     ),
     'mobile_number_verified' => array(
@@ -441,17 +360,105 @@ function mobile_number_field_widget_info() {
   return array(
     'mobile_number_default' => array(
       'label' => t('Mobile Number'),
-      'field types' => array('mobile_number'),
-      'settings' => array(),
+      'field types' => array('mobile_number', 'telephone'),
+      'settings' => array(
+        'verify' => MOBILE_NUMBER_VERIFY_NONE,
+        'message' => MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
+        'countries' => array(),
+        'default_country' => 'US',
+      ),
     ),
   );
+}
+
+/**
+ * Implements hook_field_widget_settings_form().
+ */
+function mobile_number_field_widget_settings_form($field, $instance) {
+  $settings = $instance['widget']['settings'];
+
+  $verification_enabled = $field['type'] == 'mobile_number';
+
+  $form = array();
+
+  $form['default_country'] = array(
+    '#type' => 'select',
+    '#title' => t('Default Country'),
+    '#options' => MobileNumber::getCountryOptions(array(), TRUE),
+    '#default_value' => !empty($settings['default_country']) ? $settings['default_country'] : 'US',
+    '#description' => t('Default country for mobile number input.'),
+    '#required' => TRUE,
+    '#element_validate' => array('mobile_number_field_widget_settings_validate'),
+  );
+
+  $form['countries'] = array(
+    '#type' => 'select',
+    '#title' => t('Allowed Countries'),
+    '#options' => MobileNumber::getCountryOptions(array(), TRUE),
+    '#default_value' => !empty($settings['countries']) ? $settings['countries'] : NULL,
+    '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
+    '#multiple' => TRUE,
+    '#attached' => array('css' => array(drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css')),
+  );
+
+  if($verification_enabled) {
+    $form['verify'] = array(
+      '#type' => 'radios',
+      '#title' => t('Verification'),
+      '#options' => array(
+        MOBILE_NUMBER_VERIFY_NONE => t('None'),
+        MOBILE_NUMBER_VERIFY_OPTIONAL => t('Optional'),
+        MOBILE_NUMBER_VERIFY_REQUIRED => t('Required'),
+      ),
+      '#default_value' => !empty($settings['verify']) ? $settings['verify'] : MOBILE_NUMBER_VERIFY_NONE,
+      '#description' => t('Verification requirement. Will send sms to mobile number when user requests to verify the number as their own. Requires <a href="https://www.drupal.org/project/smsframework" target="_blank">SMS Framework</a> or any other sms sending module that integrates with with the Mobile Number module.'),
+      '#required' => TRUE,
+      '#disabled' => !mobile_number_sms_sending_is_enabled(),
+    );
+
+    $form['message'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Verification Message'),
+      '#default_value' => isset($settings['message']) ? $settings['message'] : MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
+      '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled, but be aware that entity values will not be available on entity creation forms as the entity was not created yet.'),
+      '#required' => TRUE,
+      '#disabled' => !mobile_number_sms_sending_is_enabled(),
+    );
+
+    if (module_exists('token')) {
+      $form['message']['#element_validate'] = array('token_element_validate');
+      $form['message']['#token_types'] = array($instance['entity_type']);
+      $form['message_token_tree']['token_tree'] = array(
+        '#theme' => 'token_tree',
+        '#token_types' => array($instance['entity_type']),
+        '#dialog' => TRUE,
+      );
+    }
+  }
+
+  return $form;
+}
+
+/**
+ * Field instance settings validate callback.
+ */
+function mobile_number_field_widget_settings_validate($element, &$form_state) {
+  $parents = $element['#parents'];
+  array_pop($parents);
+  $values = drupal_array_get_nested_value($form_state['values'], $parents);
+  t($values['message']);
+  $default_country = $values['default_country'];
+  $allowed_countries = $values['countries'];
+  if (!empty($allowed_countries) && empty($allowed_countries[$default_country])) {
+    form_error($element, t('Default country is not in one of the allowed countries.'));
+  }
 }
 
 /**
  * Implements hook_field_widget_form().
  */
 function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $settings = $instance['settings'];
+  $settings = $instance['widget']['settings'];
   $tfa_field = variable_get('mobile_number_tfa_field', '');
 
   $element += array(
@@ -459,7 +466,7 @@ function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance
     '#description' => $element['#description'],
     '#default_value' => !empty($items[$delta]) ? $items[$delta] : array(),
     '#allowed_countries' => $settings['countries'],
-    '#verify' => mobile_number_sms_sending_is_enabled() ? $instance['settings']['verify'] : MOBILE_NUMBER_VERIFY_NONE,
+    '#verify' => mobile_number_sms_sending_is_enabled() ? $settings['verify'] : MOBILE_NUMBER_VERIFY_NONE,
     '#message' => $settings['message'],
     '#tfa' => $instance['entity_type'] == 'user' && $tfa_field && $tfa_field == $field['field_name'] && $field['cardinality'] == 1 ? TRUE : NULL,
     '#token_data' => !empty($form['#entity']) ? array($instance['entity_type'] => $form['#entity']) : array(),
@@ -531,9 +538,10 @@ function mobile_number_tfa_account_number($uid) {
  */
 function mobile_number_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   $instance = $form['#instance'];
+  $settings = $instance['widget']['settings'];
 
   if ($instance['entity_type'] == 'user' && $form['#field']['type'] == 'mobile_number') {
-    $form['instance']['settings']['tfa'] = array(
+    $instance['tfa'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use this field for two-factor authentication'),
       '#description' => t("If enabled, users will be able to choose if to use the number for two factor authentication. Only one field can be set true for this value, verification must be enabled, and the field must be of cardinality 1. Users are required to verify their number when enabling their two-factor authenticaion. <a href='https://www.drupal.org/project/tfa' target='_blank'>Two Factor Authentication</a> must be installed, as well as a supported sms provider such as <a href='https://www.drupal.org/project/smsframework' target='_blank'>SMS Framework</a>."),
@@ -543,7 +551,7 @@ function mobile_number_form_field_ui_field_edit_form_alter(&$form, &$form_state)
     );
 
     if (variable_get('tfa_enabled', FALSE) && mobile_number_sms_sending_is_enabled()) {
-      $form['instance']['settings']['tfa']['#states'] = array(
+      $instance['tfa']['#states'] = array(
         'disabled' => array('input[name="instance[settings][verify]"]' => array('value' => MOBILE_NUMBER_VERIFY_NONE)),
         'enabled' => array('select[name="field[cardinality]"]' => array('value' => '1')),
       );
@@ -557,7 +565,7 @@ function mobile_number_form_field_ui_field_edit_form_alter(&$form, &$form_state)
  * Submit callback for field_ui_field_edit_form.
  */
 function mobile_number_form_field_ui_field_edit_form_submit($form, $form_state) {
-  $tfa = !empty($form_state['values']['instance']['settings']['tfa']);
+  $tfa = !empty($form_state['values']['instance']['widget']['settings']['tfa']);
   if (!empty($tfa)) {
     variable_set('mobile_number_tfa_field', $form['#instance']['field_name']);
   }
@@ -805,8 +813,8 @@ function mobile_number_element_validate($element, &$form_state) {
   $tree_parents = $element['#parents'];
   $value = drupal_array_get_nested_value($form_state['values'], $tree_parents);
   $input = drupal_array_get_nested_value($form_state['input'], $tree_parents);
-  $settings = !empty($element['#field_name']) ? $form_state['field'][$element['#field_name']][$element['#language']]['instance']['settings'] : array();
-  $settings = $settings ? $settings + $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings'] : $settings;
+  $unique = !empty($element['#field_name']) && !empty($form_state['field'][$element['#field_name']][$element['#language']]['field']['settings']['unique']) ?
+    $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings']['unique'] : NULL;
   $input = $input ? $input : array();
   $mobile_number = NULL;
   $countries = MobileNumber::getCountryOptions(array(), TRUE);
@@ -882,11 +890,11 @@ function mobile_number_element_validate($element, &$form_state) {
     }
   }
 
-  if (!$op && !$errors && $mobile_number && $settings && $settings['unique'] && $mobile_number->callableNumber !== $element['#default_value']['value']) {
+  if (!$op && !$errors && $mobile_number && !empty($unique) && $mobile_number->callableNumber !== $element['#default_value']['value']) {
     $field_query = new EntityFieldQuery();
     $field_query->fieldCondition($element['#field_name'], 'value', $mobile_number->callableNumber);
 
-    if ($settings['unique'] == 2) {
+    if ($unique == 2) {
       $field_query->fieldCondition($element['#field_name'], 'verified', 1);
     }
 
