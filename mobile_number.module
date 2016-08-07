@@ -446,7 +446,9 @@ function mobile_number_field_widget_settings_validate($element, &$form_state) {
   $parents = $element['#parents'];
   array_pop($parents);
   $values = drupal_array_get_nested_value($form_state['values'], $parents);
-  t($values['message']);
+  if(!empty($values['message'])) {
+    t($values['message']);
+  }
   $default_country = $values['default_country'];
   $allowed_countries = $values['countries'];
   if (!empty($allowed_countries) && empty($allowed_countries[$default_country])) {
