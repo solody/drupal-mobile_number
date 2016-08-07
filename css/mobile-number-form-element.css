@@ -33,7 +33,7 @@ div.mobile-number-field div.form-item {
   background-image: url("../images/flags.png");
   background-repeat: no-repeat;
   background-color: transparent;
-  background-position: 0;
+  background-position: 16px -11px;
   display:inline-block;
   margin: 10px auto;
   vertical-align: bottom;
