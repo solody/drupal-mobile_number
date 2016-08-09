@@ -5,9 +5,9 @@
  * Contains MobileNumber.
  */
 
-use libphonenumber\PhoneNumberUtil;
-
 require_once drupal_get_path('module', 'mobile_number') . '/include/mobile_number.libphonenumber.inc';
+
+use libphonenumber\PhoneNumberUtil;
 
 /**
  * Class MobileNumber handles mobile number validation and verification.
