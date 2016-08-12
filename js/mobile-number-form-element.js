@@ -51,6 +51,7 @@
 
       if (settings['mobileNumberVerificationPrompt']) {
         $('#' + settings['mobileNumberVerificationPrompt'] + ' .verification').addClass('show');
+        $('#' + settings['mobileNumberVerificationPrompt'] + ' .verification input[type="text"]').val('');
       }
 
       if (settings['mobileNumberVerified']) {

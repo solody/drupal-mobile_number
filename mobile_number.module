@@ -33,13 +33,22 @@ function mobile_number_form_alter($form, $form_state) {
  * Implements hook_permission().
  */
 function mobile_number_permission() {
-  return array(
-    'bypass mobile number verification requirement' => array(
-      'title' => t('Bypass mobile number verification requirement'),
-      'description' => t('Allow saving unverified numbers when verification is required.'),
-      'restrict access' => TRUE,
-    ),
+  $permissions = array();
+
+  $permissions['bypass mobile number verification requirement'] = array(
+    'title' => t('Bypass mobile number verification requirement'),
+    'description' => t('Allow saving unverified numbers when verification is required.'),
+    'restrict access' => TRUE,
   );
+  
+  if (module_exists('services')) {
+    $permissions['access mobile number services api'] = array(
+      'title' => t('Access mobile number services api'),
+      'description' => t('Allow using services api such as request verification code.'),
+    );
+  }
+
+  return $permissions;
 }
 
 /**
@@ -336,7 +345,7 @@ function mobile_number_field_formatter_view($entity_type, $entity, $field, $inst
           case 'mobile_number_verified':
             $output = array(
               '#type' => 'markup',
-              '#markup' => '<span class="verified-status ' . (!empty($item['verified']) ? 'verified' : '')  . '">' . check_plain(!empty($item['verified']) ? t('Verified') : t('Not verified')) . '</span>',
+              '#markup' => '<span class="verified-status ' . (!empty($item['verified']) ? 'verified' : '') . '">' . check_plain(!empty($item['verified']) ? t('Verified') : t('Not verified')) . '</span>',
             );
             break;
         }
@@ -401,7 +410,7 @@ function mobile_number_field_widget_settings_form($field, $instance) {
     '#attached' => array('css' => array(drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css')),
   );
 
-  if($verification_enabled) {
+  if ($verification_enabled) {
     $form['verify'] = array(
       '#type' => 'radios',
       '#title' => t('Verification'),
@@ -446,7 +455,7 @@ function mobile_number_field_widget_settings_validate($element, &$form_state) {
   $parents = $element['#parents'];
   array_pop($parents);
   $values = drupal_array_get_nested_value($form_state['values'], $parents);
-  if(!empty($values['message'])) {
+  if (!empty($values['message'])) {
     t($values['message']);
   }
   $default_country = $values['default_country'];
@@ -478,6 +487,40 @@ function mobile_number_field_widget_form(&$form, &$form_state, $field, $instance
   $element['#default_value'] += array('country' => $settings['default_country']);
 
   return $element;
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function mobile_number_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  $unique = $field['settings']['unique'];
+  $duplicates = FALSE;
+  $numbers = array();
+  if ($unique) {
+    foreach ($items AS $delta => $value) {
+      if (!empty($value['value'])) {
+        if ($unique == MOBILE_NUMBER_UNIQUE_YES) {
+          if(!empty($numbers[$value['value']])) {
+            $duplicates = TRUE;
+          }
+          $numbers[$value['value']] = TRUE;
+        }
+        if($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED && $value['verified']) {
+          if(!empty($numbers[$value['value']])) {
+            $duplicates = TRUE;
+          }
+          $numbers[$value['value']] = TRUE;
+        }
+      }
+
+      if($duplicates) {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'duplicates',
+          'message' => t('%field requires unique numbers but there are duplicate values in the field.', array('%field' => $instance['label'])),
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -638,6 +681,11 @@ function mobile_number_value_callback($element, $input = FALSE) {
     try {
       $country = !empty($input['country-code']) ? $input['country-code'] : (count($element['#allowed_countries']) == 1 ? key($element['#allowed_countries']) : NULL);
       $mobile_number = new MobileNumber($input['mobile'], $country);
+
+      if (!empty($input['verification_token']) && !empty($input['verification_code'])) {
+        $mobile_number->verifyCode($input['verification_code'], $input['verification_token']);
+      }
+
       $result = array(
         'value' => $mobile_number->callableNumber,
         'country' => $mobile_number->country,
@@ -646,11 +694,10 @@ function mobile_number_value_callback($element, $input = FALSE) {
         'tfa' => !empty($input['tfa']) ? 1 : 0,
       );
     } catch (Exception $e) {
-      $result = array();
     }
   }
   else {
-    $result = !empty($element['#default_value']) ? $element['#default_value'] : array();
+    $result = !empty($element['#default_value']['value']) ? $element['#default_value'] : array();
   }
 
   return $result;
@@ -764,6 +811,14 @@ function mobile_number_element_process($element, &$form_state) {
       '#prefix' => '<div class="verification"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>',
     );
 
+    if (!empty($form_state['storage']['mobile_number_fields'][$field_path]['token'])) {
+      $element['verification_token'] = array(
+        '#type' => 'hidden',
+        '#value' => $form_state['storage']['mobile_number_fields'][$field_path]['token'],
+        '#name' => $field_name . '[verification_token]',
+      );
+    }
+
     $element['verify'] = array(
       '#type' => 'button',
       '#value' => t('Verfiy'),
@@ -775,6 +830,11 @@ function mobile_number_element_process($element, &$form_state) {
       '#suffix' => '</div>',
       '#name' => implode('__', $element['#parents']) . '__verify',
       '#mobile_number_op' => 'mobile_number_verify',
+      '#attributes' => array(
+        'class' => array(
+          'verify-button',
+        ),
+      ),
     );
 
     if (!empty($element['#tfa'])) {
@@ -788,7 +848,7 @@ function mobile_number_element_process($element, &$form_state) {
     }
   }
 
-  if(!empty($element['#description'])) {
+  if (!empty($element['#description'])) {
     $element['description']['#markup'] = '<div class="description">' . $element['#description'] . '</div>';
   }
 
@@ -800,6 +860,10 @@ function mobile_number_element_process($element, &$form_state) {
  */
 function mobile_number_element_validate($element, &$form_state) {
   $errors = array();
+  $field_path = implode('][', $element['#parents']);
+  $tree_parents = $element['#parents'];
+  $value = drupal_array_get_nested_value($form_state['values'], $tree_parents);
+  $input = drupal_array_get_nested_value($form_state['input'], $tree_parents);
   $op = !empty($form_state['triggering_element']['#mobile_number_op']) ? $form_state['triggering_element']['#mobile_number_op'] : NULL;
   $button = !empty($form_state['triggering_element']['#name']) ? $form_state['triggering_element']['#name'] : NULL;
   $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
@@ -811,14 +875,15 @@ function mobile_number_element_validate($element, &$form_state) {
   ) {
     $op = NULL;
   }
-  $field_path = implode('][', $element['#parents']);
-  $tree_parents = $element['#parents'];
-  $value = drupal_array_get_nested_value($form_state['values'], $tree_parents);
-  $input = drupal_array_get_nested_value($form_state['input'], $tree_parents);
+
+  if (!$op && !empty($input['verification_token']) && !empty($input['verification_code'])) {
+    $op = 'mobile_number_verify';
+  }
   $unique = !empty($element['#field_name']) && !empty($form_state['field'][$element['#field_name']][$element['#language']]['field']['settings']['unique']) ?
     $form_state['field'][$element['#field_name']][$element['#language']]['field']['settings']['unique'] : NULL;
   $input = $input ? $input : array();
   $mobile_number = NULL;
+  $token = NULL;
   $countries = MobileNumber::getCountryOptions(array(), TRUE);
   $verified = FALSE;
   if ($input) {
@@ -871,11 +936,10 @@ function mobile_number_element_validate($element, &$form_state) {
         '%field' => $field_label,
       ));
     }
-    elseif ($op == 'mobile_number_send_verification' && !$verified && !$mobile_number->sendVerification($element['#message'], $mobile_number->generateVerificationCode(), $element['#token_data'])
-    ) {
+    elseif ($op == 'mobile_number_send_verification' && !$verified && !($token = $mobile_number->sendVerification($element['#message'], $mobile_number->generateVerificationCode(), $element['#token_data']))) {
       $errors[NULL] = t('An error occurred while sending sms.');
     }
-    elseif ($op == 'mobile_number_verify' && !$verified = $mobile_number->verifyCode($input['verification_code'])) {
+    elseif ($op == 'mobile_number_verify' && !$verified = $mobile_number->verifyCode($input['verification_code'], $input['verification_token'])) {
       $errors[$field_path . '][verification_code'] = t('Invalid verification code for %field.', array(
         '%field' => $field_label,
       ));
@@ -892,11 +956,11 @@ function mobile_number_element_validate($element, &$form_state) {
     }
   }
 
-  if (!$op && !$errors && $mobile_number && !empty($unique) && $mobile_number->callableNumber !== $element['#default_value']['value']) {
+  if ($op != 'mobile_number_send_verification' && !$errors && $mobile_number && !empty($unique) && $mobile_number->callableNumber !== $element['#default_value']['value']) {
     $field_query = new EntityFieldQuery();
     $field_query->fieldCondition($element['#field_name'], 'value', $mobile_number->callableNumber);
 
-    if ($unique == 2) {
+    if ($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
       $field_query->fieldCondition($element['#field_name'], 'verified', 1);
     }
 
@@ -944,6 +1008,10 @@ function mobile_number_element_validate($element, &$form_state) {
   }
   $form_state['storage']['mobile_number_fields'][$field_path]['errors'] = $errors;
 
+  if ($token) {
+    $form_state['storage']['mobile_number_fields'][$field_path]['token'] = $token;
+  }
+
   return $element;
 }
 
@@ -957,6 +1025,7 @@ function mobile_number_verify_ajax($form, &$form_state) {
   array_pop($parents);
   array_pop($tree_parents);
   $element = drupal_array_get_nested_value($form, $parents);
+  $field_name = $element['#name'];
   $field_path = implode('][', $tree_parents);
   $errors = !empty($form_state['storage']['mobile_number_fields'][$field_path]['errors']) ? $form_state['storage']['mobile_number_fields'][$field_path]['errors'] : array();
 
@@ -985,28 +1054,50 @@ function mobile_number_verify_ajax($form, &$form_state) {
 }
 
 /**
- * Implements hook_mobile_number_send_sms_callback_alter().
- */
-function mobile_number_mobile_number_send_sms_callback_alter(&$callback) {
-  if (module_exists('sms')) {
-    $callback = 'sms_send';
-  }
-}
-
-/**
  * Helper function for detecting if sms functionality is available on the site.
- *
- * @see hook_mobile_number_send_sms_callback_alter()
  *
  * @return bool
  *   Is enabled.
  */
 function mobile_number_sms_sending_is_enabled() {
+  return mobile_number_sms_callback() ? TRUE : FALSE;
+}
 
-  $send_sms_callback = '';
-  drupal_alter('mobile_number_send_sms_callback', $send_sms_callback);
+/**
+ * Send sms wrapper function.
+ *
+ * @param string $message
+ *   Sms message.
+ * @param string $number
+ *   Mobile number to send sms to.
+ *
+ * @return bool
+ *   Returns sms callback return value, expecting a bool status of the
+ *   sms sending function.
+ */
+function mobile_number_send_sms($number, $message) {
+  $callback = mobile_number_sms_callback();
 
-  return $send_sms_callback ? TRUE : FALSE;
+  if (!$callback) {
+    return FALSE;
+  }
+
+  return call_user_func($callback, $number, $message);
+}
+
+/**
+ * Helper function for finding sms integrations and returning the sms callback.
+ *
+ * @return bool|callable
+ *   Callback, or FALSE if not callable.
+ */
+function mobile_number_sms_callback() {
+  $callback = array();
+  if (module_exists('sms')) {
+    $callback = 'sms_send';
+  }
+  drupal_alter('mobile_number_send_sms_callback', $callback);
+  return is_callable($callback) ? $callback : FALSE;
 }
 
 /**
@@ -1031,4 +1122,43 @@ function mobile_number_webform_component_info() {
     'file' => 'components/mobile_number.inc',
   );
   return $components;
+}
+
+
+/**
+ * Implements hook_services_resources().
+ */
+function mobile_number_services_resources() {
+  return array(
+    'mobile_number' => array(
+      'actions' => array(
+        'request_verification_code' => array(
+          'help' => 'Sends a verification code to a mobile number',
+          'file' => array(
+            'type' => 'inc',
+            'module' => 'mobile_number',
+            'name' => 'include/mobile_number.resources'
+          ),
+          'callback' => '_mobile_number_request_code',
+          'access arguments' => array('access mobile number services api'),
+          'args' => array(
+            array(
+              'name' => 'number',
+              'type' => 'string',
+              'description' => 'The mobile number to send code to.',
+              'source' => array('data' => 'number'),
+              'optional' => FALSE,
+            ),
+            array(
+              'name' => 'country',
+              'type' => 'string',
+              'description' => 'The country of the mobile number.',
+              'source' => array('data' => 'country'),
+              'optional' => TRUE,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

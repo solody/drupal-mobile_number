@@ -22,7 +22,9 @@ class MobileNumber implements MobileNumberInterface {
   const ERROR_WRONG_TYPE = 2;
   const ERROR_WRONG_COUNTRY = 3;
   const ERROR_NO_NUMBER = 4;
-  const VERIFY_WRONG_CODE = 1;
+  const VERIFY_WRONG_CODE = 5;
+  const VERIFY_TOO_MANY_ATTEMPTS = 6;
+  const VERIFY_SMS_FAILED = 7;
   const VERIFY_ATTEMPTS_INTERVAL = 3600;
 
   /**
@@ -203,10 +205,7 @@ class MobileNumber implements MobileNumberInterface {
       $message = token_replace($message, $token_data);
     }
 
-    $send_sms_callback = '';
-    drupal_alter('mobile_number_send_sms_callback', $send_sms_callback);
-
-    if ($send_sms_callback && $send_sms_callback($this->callableNumber, $message)) {
+    if (mobile_number_send_sms($this->callableNumber, $message)) {
       $time = time();
       $token = drupal_get_token(rand(0, 999999999) . $time . 'mobile verification token' . $this->callableNumber);
       $hash = $this->codeHash($token, $code, $this->callableNumber);

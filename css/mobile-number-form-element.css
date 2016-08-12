@@ -79,12 +79,20 @@ div.mobile-number-field div.form-item {
 }
 
 .mobile-number-field .verification,
-.mobile-number-field .send-button {
-  display: none;
+.mobile-number-field .send-button,
+.mobile-number-field .verify-button,
+.mobile-number-field .form-text {
   vertical-align: bottom;
   margin: 0;
   position: relative;
   z-index: 1;
+}
+.mobile-number-field .description {
+  margin: 5px 0px;
+}
+.mobile-number-field .verification,
+.mobile-number-field .send-button {
+  display: none;
 }
 
 .mobile-number-field .send-button.show {
