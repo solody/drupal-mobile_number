@@ -83,26 +83,31 @@ function mobile_number_feeds_set_target(FeedsSource $source, $entity, $target, a
         try {
           $mobile_number = new MobileNumber($v);
           $field[$language][$delta]['value'] = $mobile_number->callableNumber;
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
 
         }
         break;
+
       case 'country':
-        if(!empty($field[$language][$delta]['local_number'])) {
+        if (!empty($field[$language][$delta]['local_number'])) {
           try {
             $mobile_number = new MobileNumber($field[$language][$delta]['local_number'], $v);
             $field[$language][$delta]['value'] = $mobile_number->callableNumber;
-          } catch (Exception $e) {
+          }
+          catch (Exception $e) {
 
           }
         }
-      break;
+        break;
+
       case 'local_number':
-        if(!empty($field[$language][$delta]['country'])) {
+        if (!empty($field[$language][$delta]['country'])) {
           try {
             $mobile_number = new MobileNumber($v, $field[$language][$delta]['country']);
             $field[$language][$delta]['value'] = $mobile_number->callableNumber;
-          } catch (Exception $e) {
+          }
+          catch (Exception $e) {
 
           }
         }

@@ -8,6 +8,7 @@
 require_once drupal_get_path('module', 'mobile_number') . '/include/mobile_number.libphonenumber.inc';
 
 use libphonenumber\PhoneNumberUtil;
+use libphonenumber\PhoneNumberFormat;
 
 /**
  * Class MobileNumber handles mobile number validation and verification.
@@ -89,7 +90,7 @@ class MobileNumber implements MobileNumberInterface {
       throw new \Exception('Invalid number', $this::ERROR_INVLAID_NUMBER);
     }
 
-    if($types) {
+    if ($types) {
       if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
         throw new \Exception('Not a mobile number', $this::ERROR_WRONG_TYPE);
       }
@@ -105,7 +106,7 @@ class MobileNumber implements MobileNumberInterface {
 
     $country_prefix = $this->libUtil->getCountryCodeForRegion($this->country);
 
-    $this->callableNumber = $this->libUtil->format($phone_number, \libphonenumber\PhoneNumberFormat::E164);
+    $this->callableNumber = $this->libUtil->format($phone_number, PhoneNumberFormat::E164);
     $this->libPhoneNumber = $phone_number;
     $this->verificationToken = '';
 

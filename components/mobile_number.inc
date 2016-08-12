@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @file
+ * Mobile_number.inc.
+ */
+
+/**
+ * Webform mobile number defaults.
+ */
 function _webform_defaults_mobile_number() {
   return array(
     'name' => '',
@@ -17,7 +25,9 @@ function _webform_defaults_mobile_number() {
   );
 }
 
-
+/**
+ * Webform mobile number settings form.
+ */
 function _webform_edit_mobile_number($component) {
   $instance['entity_type'] = 'node';
   $instance['widget']['settings'] = $component['extra'];
@@ -26,6 +36,9 @@ function _webform_edit_mobile_number($component) {
   return $form;
 }
 
+/**
+ * Webform mobile number widget.
+ */
 function _webform_render_mobile_number($component, $value = NULL, $filter = TRUE) {
   $node = isset($component['nid']) ? node_load($component['nid']) : NULL;
   $settings = $component['extra'];
@@ -55,6 +68,9 @@ function _webform_render_mobile_number($component, $value = NULL, $filter = TRUE
   return $element;
 }
 
+/**
+ * Webform mobile number display.
+ */
 function _webform_display_mobile_number($component, $value, $format = 'html') {
   $output = array();
   try {
@@ -63,12 +79,16 @@ function _webform_display_mobile_number($component, $value, $format = 'html') {
       '#type' => 'markup',
       '#markup' => check_plain($mobile_number->libUtil->format($mobile_number->libPhoneNumber, 1)),
     );
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
 
   }
   return $output;
 }
 
+/**
+ * Webform mobile number table display.
+ */
 function _webform_table_mobile_number($component, $value) {
   $output = array();
   try {
@@ -77,12 +97,16 @@ function _webform_table_mobile_number($component, $value) {
       '#type' => 'markup',
       '#markup' => check_plain($mobile_number->libUtil->format($mobile_number->libPhoneNumber, 1)),
     );
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
 
   }
   return $output;
 }
 
+/**
+ * Webform mobile number csv headers.
+ */
 function _webform_csv_headers_mobile_number($component, $export_options) {
   $header = array();
   $header[0] = array('', '', '', '');
@@ -91,6 +115,9 @@ function _webform_csv_headers_mobile_number($component, $export_options) {
   return $header;
 }
 
+/**
+ * Webform mobile number csv data.
+ */
 function _webform_csv_data_mobile_number($component, $export_options, $value) {
 
   return array(

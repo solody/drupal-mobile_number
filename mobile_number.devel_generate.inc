@@ -4,6 +4,8 @@
  * Provides devel generate integration.
  */
 
+use libphonenumber\PhoneNumberUtil;
+
 require_once drupal_get_path('module', 'mobile_number') . '/include/mobile_number.libphonenumber.inc';
 
 /**
@@ -25,11 +27,11 @@ function _mobile_number_devel_generate($object, $field, $instance, $bundle) {
 
   static $last_numbers = array();
 
-  $util = \libphonenumber\PhoneNumberUtil::getInstance();
+  $util = PhoneNumberUtil::getInstance();
 
   $settings = array(
     'verify' => MOBILE_NUMBER_VERIFY_NONE,
-    'countries' => array()
+    'countries' => array(),
   );
   if ($instance['widget']['type'] == 'mobile_number_default') {
     $settings = $instance['widget']['settings'];
@@ -52,7 +54,8 @@ function _mobile_number_devel_generate($object, $field, $instance, $bundle) {
         try {
           $mobile_number = new MobileNumber($number, $country);
           break;
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
 
         }
       }
@@ -69,9 +72,11 @@ function _mobile_number_devel_generate($object, $field, $instance, $bundle) {
       case MOBILE_NUMBER_VERIFY_NONE:
         $value['verified'] = 0;
         break;
+
       case MOBILE_NUMBER_VERIFY_OPTIONAL:
         $value['verified'] = rand(0, 1);
         break;
+
       case MOBILE_NUMBER_VERIFY_REQUIRED:
         $value['verified'] = 1;
         break;

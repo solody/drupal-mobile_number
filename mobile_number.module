@@ -40,7 +40,7 @@ function mobile_number_permission() {
     'description' => t('Allow saving unverified numbers when verification is required.'),
     'restrict access' => TRUE,
   );
-  
+
   if (module_exists('services')) {
     $permissions['access mobile number services api'] = array(
       'title' => t('Access mobile number services api'),
@@ -82,7 +82,7 @@ function mobile_number_field_info() {
  * @see entity_field_info_alter()
  */
 function mobile_number_property_callback(&$info, $entity_type, $field, $instance, $field_type) {
-  // Define a data structure for dealing with mobile number fields
+  // Define a data structure for dealing with mobile number fields.
   $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
 
   $property['getter callback'] = 'entity_metadata_field_verbatim_get';
@@ -181,7 +181,8 @@ function mobile_number_field_presave($entity_type, $entity, $field, $instance, $
         $items[$delta]['country'] = $mobile_number->country;
         $items[$delta]['local_number'] = $mobile_number->localNumber;
         $items[$delta]['tfa'] = !empty($item['tfa']) ? 1 : 0;
-      } catch (Exception $e) {
+      }
+      catch (Exception $e) {
         unset($items[$delta]);
       }
     }
@@ -349,7 +350,8 @@ function mobile_number_field_formatter_view($entity_type, $entity, $field, $inst
             );
             break;
         }
-      } catch (Exception $e) {
+      }
+      catch (Exception $e) {
         $output = array(
           '#markup' => t('Invalid number'),
         );
@@ -497,23 +499,23 @@ function mobile_number_field_validate($entity_type, $entity, $field, $instance, 
   $duplicates = FALSE;
   $numbers = array();
   if ($unique) {
-    foreach ($items AS $delta => $value) {
+    foreach ($items as $delta => $value) {
       if (!empty($value['value'])) {
         if ($unique == MOBILE_NUMBER_UNIQUE_YES) {
-          if(!empty($numbers[$value['value']])) {
+          if (!empty($numbers[$value['value']])) {
             $duplicates = TRUE;
           }
           $numbers[$value['value']] = TRUE;
         }
-        if($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED && $value['verified']) {
-          if(!empty($numbers[$value['value']])) {
+        if ($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED && $value['verified']) {
+          if (!empty($numbers[$value['value']])) {
             $duplicates = TRUE;
           }
           $numbers[$value['value']] = TRUE;
         }
       }
 
-      if($duplicates) {
+      if ($duplicates) {
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'duplicates',
           'message' => t('%field requires unique numbers but there are duplicate values in the field.', array('%field' => $instance['label'])),
@@ -693,7 +695,8 @@ function mobile_number_value_callback($element, $input = FALSE) {
         'verified' => ($mobile_number->isVerified() || (!empty($element['#default_value']['verified']) && $mobile_number->callableNumber == $element['#default_value']['value'])) ? 1 : 0,
         'tfa' => !empty($input['tfa']) ? 1 : 0,
       );
-    } catch (Exception $e) {
+    }
+    catch (Exception $e) {
     }
   }
   else {
@@ -732,7 +735,8 @@ function mobile_number_element_process($element, &$form_state) {
   try {
     $default_mobile_number = new MobileNumber($element['#default_value']['value']);
     $element['#default_value']['country'] = $default_mobile_number->country;
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
 
   }
 
@@ -753,7 +757,8 @@ function mobile_number_element_process($element, &$form_state) {
       $verified = $mobile_number->isVerified();
       $default_country = $mobile_number->country;
       $countries += MobileNumber::getCountryOptions(array($mobile_number->country => $mobile_number->country));
-    } catch (Exception $e) {
+    }
+    catch (Exception $e) {
 
     }
   }
@@ -891,7 +896,8 @@ function mobile_number_element_validate($element, &$form_state) {
     try {
       $mobile_number = new MobileNumber($input['mobile'], $input['country-code']);
       $verified = $mobile_number->isVerified();
-    } catch (Exception $e) {
+    }
+    catch (Exception $e) {
       switch ($e->getCode()) {
         case MobileNumber::ERROR_NO_NUMBER:
           if ($op) {
@@ -1066,10 +1072,10 @@ function mobile_number_sms_sending_is_enabled() {
 /**
  * Send sms wrapper function.
  *
- * @param string $message
- *   Sms message.
  * @param string $number
  *   Mobile number to send sms to.
+ * @param string $message
+ *   Sms message.
  *
  * @return bool
  *   Returns sms callback return value, expecting a bool status of the
@@ -1124,7 +1130,6 @@ function mobile_number_webform_component_info() {
   return $components;
 }
 
-
 /**
  * Implements hook_services_resources().
  */
@@ -1137,7 +1142,7 @@ function mobile_number_services_resources() {
           'file' => array(
             'type' => 'inc',
             'module' => 'mobile_number',
-            'name' => 'include/mobile_number.resources'
+            'name' => 'include/mobile_number.resources',
           ),
           'callback' => '_mobile_number_request_code',
           'access arguments' => array('access mobile number services api'),

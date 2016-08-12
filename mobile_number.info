@@ -6,6 +6,5 @@ files[] = include/mobile_number.libphonenumber.inc
 files[] = src/MobileNumberInterface.php
 files[] = src/MobileNumber.php
 files[] = src/MobileNumberTfa.php
-files[] = mobile_number.feeds.inc
 
 dependencies[] = 'libraries'
