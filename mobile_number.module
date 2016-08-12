@@ -293,7 +293,7 @@ function mobile_number_field_formatter_view($entity_type, $entity, $field, $inst
     if (isset($item['value'])) {
       try {
         $as_link = !empty($settings['as_link']) ? TRUE : FALSE;
-        $mobile_number = new MobileNumber($item['value']);
+        $mobile_number = new MobileNumber($item['value'], NULL, array());
         switch ($display['type']) {
           case 'mobile_number_international':
             if ($as_link) {

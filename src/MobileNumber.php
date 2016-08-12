@@ -89,8 +89,10 @@ class MobileNumber implements MobileNumberInterface {
       throw new \Exception('Invalid number', $this::ERROR_INVLAID_NUMBER);
     }
 
-    if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
-      throw new \Exception('Not a mobile number', $this::ERROR_WRONG_TYPE);
+    if($types) {
+      if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
+        throw new \Exception('Not a mobile number', $this::ERROR_WRONG_TYPE);
+      }
     }
 
     $national_number = $phone_number->getNationalNumber();
