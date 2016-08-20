@@ -2,6 +2,7 @@
 
 namespace Drupal\mobile_number;
 
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use \libphonenumber\PhoneNumber;
 use \libphonenumber\PhoneNumberFormat;
@@ -104,9 +105,9 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMobileNumber($number, $country = NULL) {
+  public function getMobileNumber($number, $country = NULL, $types = array(1 => 1, 2 => 2)) {
     try {
-      return $this->testMobileNumber($number, $country);
+      return $this->testMobileNumber($number, $country, $types);
     }
     catch (MobileNumberException $e) {
       return NULL;
@@ -116,8 +117,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function testMobileNumber($number, $country = NULL) {
-    $types = array(1 => 1, 2 => 2);
+  public function testMobileNumber($number, $country = NULL, $types = array(1 => 1, 2 => 2)) {
 
     if (!$number) {
       throw new MobileNumberException('Empty number', MobileNumberException::ERROR_NO_NUMBER);
@@ -127,17 +127,19 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       /** @var PhoneNumber $phone_number */
       $phone_number = $this->libUtil->parse($number, $country);
     }
-    catch (MobileNumberException $e) {
+    catch (NumberParseException $e) {
       throw new MobileNumberException('Invalid number', MobileNumberException::ERROR_INVALID_NUMBER);
     }
 
-    if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
-      throw new MobileNumberException('Not a mobile number', MobileNumberException::ERROR_WRONG_TYPE);
+    if($types) {
+      if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
+        throw new MobileNumberException('Not a mobile number', MobileNumberException::ERROR_WRONG_TYPE);
+      }
     }
 
     $mcountry = $this->libUtil->getRegionCodeForNumber($phone_number);
 
-    if ($country && $mcountry != $country) {
+    if ($country && ($mcountry != $country)) {
       throw new MobileNumberException('Wrong country', MobileNumberException::ERROR_WRONG_COUNTRY);
     }
 

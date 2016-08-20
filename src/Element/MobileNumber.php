@@ -2,6 +2,7 @@
 
 namespace Drupal\mobile_number\Element;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\mobile_number\Exception\MobileNumberException;
@@ -146,7 +147,8 @@ class MobileNumber extends FormElement {
 
     $mobile_number = NULL;
     $verified = FALSE;
-    $countries = $util->getCountryOptions($element['#allowed_countries']) + $util->getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']));
+    $countries = $util->getCountryOptions($element['#allowed_countries'], TRUE);
+    $countries += $util->getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']));
     $default_country = $element['#default_value']['country'];
 
     if (!empty($value['value']) && $mobile_number = $util->getMobileNumber($value['value'])) {
@@ -233,6 +235,10 @@ class MobileNumber extends FormElement {
         );
       }
     }
+
+    if(!empty($element['#description'])) {
+      $element['description']['#markup'] = '<div class="description">' . $element['#description'] . '</div>';
+    }
     return $element;
   }
 
@@ -253,10 +259,13 @@ class MobileNumber extends FormElement {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $errors = array();
-    $op = !empty($form_state->getTriggeringElement()['#mobile_number_op']) ? $form_state->getTriggeringElement()['#mobile_number_op'] : NULL;
-    if (!in_array($op, array(
-      'mobile_number_send_verification',
-      'mobile_number_verify',
+    $triggering_element = $form_state->getTriggeringElement();
+    $op = !empty($triggering_element['#mobile_number_op']) ? $triggering_element['#mobile_number_op'] : NULL;
+    $button = !empty($triggering_element['#name']) ? $triggering_element['#name'] : NULL;
+    $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
+    if (!in_array($button, array(
+      implode('__', $element['#parents']) . '__send_verification',
+      implode('__', $element['#parents']) . '__verify',
     ))
     ) {
       $op = NULL;
@@ -269,6 +278,7 @@ class MobileNumber extends FormElement {
     $form_object = $form_state->getFormObject();
     $settings = array();
     if($form_object instanceof \Drupal\Core\Entity\ContentEntityForm) {
+      /** @var ContentEntityInterface $entity */
       $entity = $form_object->getEntity();
       $entity_type = $entity->getEntityTypeId();
       $field_name = $element['#parents'][0];
@@ -276,7 +286,7 @@ class MobileNumber extends FormElement {
     }
     $input = $input ? $input : array();
     $mobile_number = NULL;
-    $countries = $util->getCountryOptions();
+    $countries = $util->getCountryOptions(array(), TRUE);
     $verified = FALSE;
     if ($input) {
       $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
@@ -289,7 +299,7 @@ class MobileNumber extends FormElement {
           case MobileNumberException::ERROR_NO_NUMBER:
             if ($op) {
               $errors[$field_path . '][mobile'] = t('Phone number in %field is required.', array(
-                '%field' => $element['#title'],
+                '%field' => $field_label,
               ));
             }
             break;
@@ -298,7 +308,7 @@ class MobileNumber extends FormElement {
           case MobileNumberException::ERROR_WRONG_TYPE:
             $errors[$field_path . '][mobile'] = t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
               '%value' => $input['mobile'],
-              '%field' => $element['#title'],
+              '%field' => $field_label,
               '%country' => $countries[$input['country-code']],
             ));
 
@@ -307,7 +317,7 @@ class MobileNumber extends FormElement {
           case MobileNumberException::ERROR_WRONG_COUNTRY:
             $errors[$field_path . '][mobile'] = t('The country %value provided for %field does not match the mobile number prefix.', array(
               '%value' => $countries[$input['country-code']],
-              '%field' => $element['#title'],
+              '%field' => $field_label,
             ));
             break;
         }
@@ -321,12 +331,12 @@ class MobileNumber extends FormElement {
       if ($element['#allowed_countries'] && empty($element['#allowed_countries'][$country])) {
         $errors[$field_path . '][country-code'] = t('The country %value provided for %field is not an allowed country.', array(
           '%value' => $countries[$country],
-          '%field' => $element['#title'],
+          '%field' => $field_label,
         ));
       }
       elseif ($op && !$util->checkFlood($mobile_number)) {
         $errors[$field_path . '][verification_code'] = t('Too many validation attempts for %field, please try again in a few hours.', array(
-          '%field' => $element['#title'],
+          '%field' => $field_label,
         ));
       }
       elseif ($op == 'mobile_number_send_verification' && !$verified && !$util->sendVerification($mobile_number, $element['#message'], $util->generateVerificationCode(), $element['#token_data'])
@@ -335,17 +345,17 @@ class MobileNumber extends FormElement {
       }
       elseif ($op == 'mobile_number_verify' && !$verified = $util->verifyCode($mobile_number, $input['verification_code'])) {
         $errors[$field_path . '][verification_code'] = t('Invalid verification code for %field.', array(
-          '%field' => $element['#title'],
+          '%field' => $field_label,
         ));
       }
-      elseif (!$op && $element['#verify'] == MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_REQUIRED && !$verified) {
+      elseif (!$op && !$verified && $element['#verify'] == $util::MOBILE_NUMBER_VERIFY_REQUIRED && !\Drupal::currentUser()->hasPermission('bypass mobile number verification requirement')) {
         $errors[$field_path . '][mobile'] = t('%field verification is required.', array(
-          '%field' => $element['#title'],
+          '%field' => $field_label,
         ));
       }
       elseif (!$op && !empty($input['tfa']) && !$verified) {
         $errors[$field_path . '][tfa'] = t('%field verification is required for enabling two-factor authentication.', array(
-          '%field' => $element['#title'],
+          '%field' => $field_label,
         ));
       }
       elseif (!$op && !empty($settings['unique']) && $util->getCallableNumber($mobile_number) !== $element['#default_value']['value']) {
@@ -363,7 +373,7 @@ class MobileNumber extends FormElement {
 
         if ($result) {
           $errors[$field_path . '][mobile'] = t('The number for %field already exists. It must be unique.', array(
-            '%field' => $element['#title'],
+            '%field' => $field_label,
           ));
         }
       }
@@ -440,6 +450,7 @@ class MobileNumber extends FormElement {
     }
 
     $element['messages'] = array('#type' => 'status_messages');
+    unset($element['_weight']);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(NULL, $element));
 

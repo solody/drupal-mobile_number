@@ -6,6 +6,7 @@ namespace Drupal\mobile_number\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Plugin implementation of the 'mobile_number_international' formatter.
@@ -14,27 +15,35 @@ use Drupal\Core\Form\FormStateInterface;
  *   id = "mobile_number_international",
  *   label = @Translation("International Number"),
  *   field_types = {
- *     "mobile_number"
+ *     "mobile_number",
+ *     "telephone"
  *   }
  * )
  */
 class MobileNumberInternationalFormatter extends FormatterBase {
 
   public $phoneDisplayFormat = 1;
+  
+  /**
+   * {@inheritdoc}
+   */
+  static function defaultSettings() {
+    return parent::defaultSettings() + array('as_link' => FALSE);
+  }
 
   /**
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
-    $form['as_link'] = array(
+    $element['as_link'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show as TEL link'),
       '#default_value' => $settings['as_link'],
     );
 
-    return parent::settingsForm($form, $form_state);
+    return parent::settingsForm($form, $form_state) + $element;
   }
 
   /**
@@ -42,7 +51,7 @@ class MobileNumberInternationalFormatter extends FormatterBase {
    */
   public function settingsSummary() {
     $summary = array();
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
     if (!empty($settings['as_link'])) {
       $summary[] = t('Show as TEL link');
@@ -61,16 +70,16 @@ class MobileNumberInternationalFormatter extends FormatterBase {
     /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element = array();
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
     foreach ($items as $delta => $item) {
       /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
-      if ($mobile_number = $util->getMobileNumber($item->getValue())) {
+      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, array())) {
         if (!empty($settings['as_link'])) {
           $element[$delta] = array(
             '#type' => 'link',
             '#title' => $util->libUtil()->format($mobile_number, $this->phoneDisplayFormat),
-            '#href' => "tel:" . $util->getCallableNumber($mobile_number),
+            '#url' => Url::fromUri("tel:" . $util->getCallableNumber($mobile_number)),
           );
         }
         else {

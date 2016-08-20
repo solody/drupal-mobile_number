@@ -2,6 +2,7 @@
 
 namespace Drupal\mobile_number\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldItemBase;
@@ -37,12 +38,10 @@ class MobileNumberItem extends FieldItemBase {
   public static function defaultFieldSettings() {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    return array(
-      'default_country' => 'US',
-      'countries' => array(),
-      'verify' => $util->isSmsEnabled() ? MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL : MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
-      'message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-    ) + parent::defaultFieldSettings();
+    return parent::defaultFieldSettings() + array(
+      'verify' => $util->isSmsEnabled() ? $util::MOBILE_NUMBER_VERIFY_OPTIONAL : MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
+      'message' => $util::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
+      );
   }
 
   /**
@@ -178,23 +177,17 @@ class MobileNumberItem extends FieldItemBase {
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    /** @var \Drupal\Core\Field\FieldDefinitionInterface $field */
-    $field = $form_state->getFormObject()->getEntity();
+    $field = $this->getFieldDefinition();
+    $settings = $this->getSettings() + $this->defaultFieldSettings();
 
-    $element['#type'] = 'container';
-    $element['#element_validate'][] = array(
-      get_class($this),
-      'fieldSettingsFormValidate',
-    );
-    $form_state->set('field_item', $this);
-
-    if ($form['#entity'] instanceof User) {
+    // @todo Remove FALSE after port of TFA for drupal 8 is available
+    if ($form['#entity'] instanceof User && FALSE) {
       $element['tfa'] = array(
         '#type' => 'checkbox',
         '#title' => t('Use this field for two-factor authentication'),
         '#description' => t("If enabled, users will be able to choose if to use the number for two factor authentication. Only one field can be set true for this value, verification must be enabled, and the field must be of cardinality 1. Users are required to verify their number when enabling their two-factor authenticaion. <a href='https://www.drupal.org/project/tfa' target='_blank'>Two Factor Authentication</a> must be installed, as well as a supported sms provider such as <a href='https://www.drupal.org/project/smsframework' target='_blank'>SMS Framework</a>."),
         '#default_value' => $this->tfaAllowed() && $util->getTfaField() === $this->getFieldDefinition()
-          ->getName(),
+            ->getName(),
         '#disabled' => !$this->tfaAllowed(),
       );
 
@@ -204,32 +197,7 @@ class MobileNumberItem extends FieldItemBase {
         );
       }
     }
-
-    $element['default_country'] = array(
-      '#type' => 'select',
-      '#title' => t('Default Country'),
-      '#options' => $util->getCountryOptions(),
-      '#default_value' => $field->getSetting('default_country'),
-      '#description' => t('Default country for mobile number input.'),
-      '#required' => TRUE,
-      '#element_validate' => array(
-        array(
-          static::class,
-          'fieldSettingsFormValidate',
-        ),
-      ),
-    );
-
-    $element['countries'] = array(
-      '#type' => 'select',
-      '#title' => t('Allowed Countries'),
-      '#options' => $util->getCountryOptions(array(), TRUE),
-      '#default_value' => $field->getSetting('countries'),
-      '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
-      '#multiple' => TRUE,
-      '#attached' => array('library' => array('mobile_number/element')),
-    );
-
+  
     $element['verify'] = array(
       '#type' => 'radios',
       '#title' => t('Verification'),
@@ -238,22 +206,26 @@ class MobileNumberItem extends FieldItemBase {
         MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL => t('Optional'),
         MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_REQUIRED => t('Required'),
       ),
-      '#default_value' => $field->getSetting('verify'),
+      '#default_value' => $settings['verify'],
       '#description' => (string) t('Verification requirement. Will send sms to mobile number when user requests to verify the number as their own. Requires <a href="https://www.drupal.org/project/smsframework" target="_blank">SMS Framework</a> or any other sms sending module that integrates with with the Mobile Number module.'),
       '#required' => TRUE,
       '#disabled' => !$util->isSmsEnabled(),
     );
-
+  
     $element['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Verification Message'),
-      '#default_value' => $field->getSetting('message'),
+      '#default_value' => $settings['message'],
       '#description' => t('The SMS message to send during verification. Replacement parameters are available for verification code (!code) and site name (!site_name). Additionally, tokens are available if the token module is enabled, but be aware that entity values will not be available on entity creation forms as the entity was not created yet.'),
       '#required' => TRUE,
       '#token_types' => array($field->getTargetEntityTypeId()),
       '#disabled' => !$util->isSmsEnabled(),
+      '#element_validate' => array(array(
+        $this,
+        'fieldSettingsFormValidate',
+      )),
     );
-
+  
     if (\Drupal::moduleHandler()->moduleExists('token')) {
       $element['message']['#element_validate'] = array('token_element_validate');
       $element['message_token_tree']['token_tree'] = array(
@@ -267,28 +239,20 @@ class MobileNumberItem extends FieldItemBase {
   }
 
   /**
-   * Form element validation handler; Invokes selection plugin's validation.
+   * Validate callback for mobile number field item.
    *
    * @param array $form
-   *   The form where the settings form is being included in.
+   *   Complete form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state of the (entire) configuration form.
+   *   Form state.
    */
-  public static function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
-    $handlers = $form_state->getSubmitHandlers();
-    $form_state->setSubmitHandlers(array_merge($handlers, [
-      array(
-        static::class,
-        'fieldSettingsFormSubmit',
-      ),
-    ]));
-    $settings = $form_state->getValue('settings');
-    t($settings['message']);
-    $default_country = $settings['default_country'];
-    $allowed_countries = $settings['countries'];
-    if (!empty($allowed_countries) && empty($allowed_countries[$default_country])) {
-      $form_state->setErrorByName($form['default_country'], t('Default country is not in one of the allowed countries.'));
-    }
+  public function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
+    $submit_handlers = $form_state->getSubmitHandlers();
+    $submit_handlers[] = array(
+      $this,
+      'fieldSettingsFormSubmit',
+    );
+    $form_state->setSubmitHandlers($submit_handlers);
   }
 
   /**
@@ -299,19 +263,81 @@ class MobileNumberItem extends FieldItemBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
    */
-  public static function fieldSettingsFormSubmit(array $form, FormStateInterface $form_state) {
+  public function fieldSettingsFormSubmit(array $form, FormStateInterface $form_state) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    $tfa = !empty($form_state->getValue('settings')['tfa']);
-    $field_name = $form_state->get('field_item')
-      ->getFieldDefinition()
-      ->getName();
+    $settings = $this->getSettings();
+    if(!empty(['message'])){
+      t($settings['message']);
+    }
+
+    $tfa = !empty($this->getSetting('tfa'));
+    $field_name = $this->getFieldDefinition()->getName();
     if (!empty($tfa)) {
       $util->setTfaField($field_name);
     }
     elseif ($field_name === $util->getTfaField()) {
       $util->setTfaField('');
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  static function generateSampleValue(FieldDefinitionInterface $field_definition) {
+    static $last_numbers = array();
+
+    /** @var MobileNumberUtilInterface $util */
+    $util = \Drupal::service('mobile_number.util');
+
+    $settings = array(
+      'verify' => $util->isSmsEnabled() ? $util::MOBILE_NUMBER_VERIFY_OPTIONAL : $util::MOBILE_NUMBER_VERIFY_NONE,
+      'countries' => array(),
+    );
+
+    $country = array_rand($util->getCountryOptions($settings['countries']));
+    $last = !empty($last_numbers[$country]) ? $last_numbers[$country] : array();
+    $mobile_number = NULL;
+    if (!$last) {
+      $last['count'] = 0;
+      $last['example'] = ($number = $util->libUtil()->getExampleNumberForType($country, 1)) ? $number->getNationalNumber() : NULL;
+    }
+    $example = $last['example'];
+    $count = $last['count'];
+    if ($example) {
+      while ((strlen($count) <= strlen($example)) && !$mobile_number) {
+        $number_length = strlen($example);
+        $number = substr($example, 0, $number_length - strlen($count)) . $count;
+        if (substr($count, 0, 1) != substr($example, strlen($count) - 1, 1)) {
+          try {
+            $mobile_number = $util->testMobileNumber($number, $country);
+            break;
+          } catch (Exception $e) {
+
+          }
+        }
+        $count++;
+      };
+    }
+    $value = array();
+    if ($mobile_number) {
+      $value = array(
+        'value' => $util->getCallableNumber($mobile_number),
+      );
+      switch ($settings['verify']) {
+        case $util::MOBILE_NUMBER_VERIFY_NONE:
+          $value['verified'] = 0;
+          break;
+        case $util::MOBILE_NUMBER_VERIFY_OPTIONAL:
+          $value['verified'] = rand(0, 1);
+          break;
+        case $util::MOBILE_NUMBER_VERIFY_REQUIRED:
+          $value['verified'] = 1;
+          break;
+      }
+    }
+
+    return $value;
   }
 
   /**

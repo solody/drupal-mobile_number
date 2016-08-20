@@ -23,8 +23,15 @@ class MobileNumberCountryFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
+  static function defaultSettings() {
+    return parent::defaultSettings() + array('type' => 'name');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
     $form['type'] = array(
       '#type' => 'radios',
@@ -43,7 +50,7 @@ class MobileNumberCountryFormatter extends FormatterBase {
    */
   public function settingsSummary() {
     $summary = array();
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
     if (!empty($settings['type'])) {
       $texts = array(
@@ -63,11 +70,11 @@ class MobileNumberCountryFormatter extends FormatterBase {
     /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element = array();
-    $settings = $this->getSettings();
+    $settings = $this->getSettings() + static::defaultSettings();
 
     foreach ($items as $delta => $item) {
       /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
-      if ($mobile_number = $util->getMobileNumber($item->getValue())) {
+      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, array())) {
         if ($settings['type'] == 'code') {
           $element[$delta] = array(
             '#plain_text' => $util->getCountry($mobile_number),

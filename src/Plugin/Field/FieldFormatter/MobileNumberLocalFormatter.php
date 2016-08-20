@@ -10,7 +10,8 @@ namespace Drupal\mobile_number\Plugin\Field\FieldFormatter;
  *   id = "mobile_number_local",
  *   label = @Translation("Local Number"),
  *   field_types = {
- *     "mobile_number"
+ *     "mobile_number",
+ *     "telephone"
  *   }
  * )
  */
