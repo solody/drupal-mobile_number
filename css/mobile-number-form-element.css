@@ -50,7 +50,7 @@ div.mobile-number-field div.form-item {
   vertical-align: bottom;
   line-height: 30px;
   box-sizing: border-box;
-  width: 43px;
+  min-width: 43px;
 }
 
 .mobile-number-field .country-select select {

@@ -8,8 +8,10 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\mobile_number\Element\MobileNumber;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem;
+use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
  * Plugin implementation of the 'mobile_number' widget.
@@ -41,18 +43,15 @@ class MobileNumberWidget extends WidgetBase {
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $element = parent::settingsForm($form, $form_state);
+    $field_settings = $this->getFieldSettings();
+    $field_country_validation = isset($field_settings['countries']);
     
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
     /** @var ContentEntityInterface $entity */
     $entity = $form_state->getFormObject()->getEntity();
-  
-    $element['#type'] = 'container';
-    $element['#element_validate'][] = array(
-      get_class($this),
-      'fieldSettingsFormValidate',
-    );
+
     $form_state->set('field_item', $this);
 
     $verification_enabled = !empty($this->fieldDefinition) && ($this->fieldDefinition->getType() == 'mobile_number');
@@ -64,23 +63,23 @@ class MobileNumberWidget extends WidgetBase {
       '#default_value' => $this->getSetting('default_country'),
       '#description' => t('Default country for mobile number input.'),
       '#required' => TRUE,
-      '#element_validate' => array(
-        array(
-          $this,
-          'settingsFormValidate',
-        ),
-      ),
+      '#element_validate' => array(array(
+        $this,
+        'settingsFormValidate',
+      )),
     );
-  
-    $element['countries'] = array(
-      '#type' => 'select',
-      '#title' => t('Allowed Countries'),
-      '#options' => $util->getCountryOptions(array(), TRUE),
-      '#default_value' => $this->getSetting('countries'),
-      '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
-      '#multiple' => TRUE,
-      '#attached' => array('library' => array('mobile_number/element')),
-    );
+
+    if(!$field_country_validation) {
+      $element['countries'] = array(
+        '#type' => 'select',
+        '#title' => t('Allowed Countries'),
+        '#options' => $util->getCountryOptions(array(), TRUE),
+        '#default_value' => $this->getSetting('countries'),
+        '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
+        '#multiple' => TRUE,
+        '#attached' => array('library' => array('mobile_number/element')),
+      );
+    }
 
     if($verification_enabled) {
     }
@@ -99,25 +98,27 @@ class MobileNumberWidget extends WidgetBase {
   public function settingsFormValidate(array $element, FormStateInterface $form_state){
     $parents = $element['#parents'];
     array_pop($parents);
-    $settings = NestedArray::getValue($form_state->getValues(), $parents);
-    
+    $settings = $this->getFieldSettings();
+    $settings += NestedArray::getValue($form_state->getValues(), $parents);
+
     $default_country = $settings['default_country'];
     $allowed_countries = $settings['countries'];
-    if (!empty($allowed_countries) && empty($allowed_countries[$default_country])) {
+    if (!empty($allowed_countries) && !in_array($default_country, $allowed_countries)) {
       $form_state->setError($element, t('Default country is not in one of the allowed countries.'));
     }
   }
-  
+
   /**
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    $item = $items[$delta];
     /** @var ContentEntityInterface $entity */
     $entity = $items->getEntity();
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    $settings = $this->getSettings() + static::defaultSettings();
-    $settings += $this->getFieldSettings() + MobileNumberItem::defaultFieldSettings();
+    $settings = $this->getFieldSettings();
+    $settings += $this->getSettings() + static::defaultSettings();
     
     $tfa_field = $util->getTfaField();
 
@@ -125,15 +126,15 @@ class MobileNumberWidget extends WidgetBase {
       '#type' => 'mobile_number',
       '#description' => $element['#description'],
       '#default_value' => array(
-        'value' => $items[$delta]->value,
-        'country' => !empty($items[$delta]->country) ? $items[$delta]->country : $settings['default_country'],
-        'local_number' => $items[$delta]->local_number,
-        'verified' => $items[$delta]->verified,
-        'tfa' => $items[$delta]->tfa,
+        'value' => $item->value,
+        'country' => !empty($item->country) ? $item->country : $settings['default_country'],
+        'local_number' => $item->local_number,
+        'verified' => $item->verified,
+        'tfa' => $item->tfa,
       ),
-      '#allowed_countries' => $settings['countries'],
+      '#allowed_countries' => array_combine($settings['countries'], $settings['countries']),
       '#verify' => ($util->isSmsEnabled() && !empty($settings['verify'])) ? $settings['verify'] : MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
-      '#message' => $settings['message'],
+      '#message' => !empty($settings['message']) ? $settings['message'] : NULL,
       '#tfa' => (
         $entity->getEntityTypeId() == 'user' &&
         $tfa_field == $items->getFieldDefinition()->getName() &&
@@ -145,4 +146,20 @@ class MobileNumberWidget extends WidgetBase {
     return $element;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function errorElement(array $element, ConstraintViolationInterface $error, array $form, FormStateInterface $form_state) {
+    /** @var MobileNumberUtilInterface $util */
+    $util = \Drupal::service('mobile_number.util');
+    $op = MobileNumber::getOp($element, $form_state);
+    $mobile_number = MobileNumber::getMobileNumber($element);
+
+    if($op == 'mobile_number_send_verification' && $util->checkFlood($mobile_number)) {
+      return FALSE;
+    }
+
+    return parent::errorElement($element, $error, $form, $form_state);
+  }
+  
 }

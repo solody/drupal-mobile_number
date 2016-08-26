@@ -140,7 +140,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     $mcountry = $this->libUtil->getRegionCodeForNumber($phone_number);
 
     if ($country && ($mcountry != $country)) {
-      throw new MobileNumberException('Wrong country', MobileNumberException::ERROR_WRONG_COUNTRY);
+      throw new MobileNumberException('Mismatch country with the number\'s prefix', MobileNumberException::ERROR_WRONG_COUNTRY);
     }
 
     return $phone_number;
@@ -244,17 +244,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     $this->moduleHandler->alter('mobile_number_send_sms_callback', $send_sms_callback);
 
     if (function_exists($send_sms_callback) && $send_sms_callback($this->getCallableNumber($mobile_number), $message)) {
-      $time = time();
-      $token = \Drupal::csrfToken()->get(rand(0, 999999999) . $time . 'mobile verification token' . $this->getCallableNumber($mobile_number));
-      $hash = $this->codeHash($mobile_number, $token, $code);
-
-      \Drupal::database()->insert('mobile_number_verification')
-        ->fields(array(
-          'token' => $token,
-          'timestamp' => $time,
-          'verification_code' => $hash,
-        ))
-        ->execute();
+      $token = $this->registerVerificationCode($mobile_number, $code);
 
       $_SESSION['mobile_number_verification'][$this->getCallableNumber($mobile_number)] = array(
         'token' => $token,
@@ -265,6 +255,25 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     }
 
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function registerVerificationCode(PhoneNumber $mobile_number, $code) {
+    $time = time();
+    $token = \Drupal::csrfToken()->get(rand(0, 999999999) . $time . 'mobile verification token' . $this->getCallableNumber($mobile_number));
+    $hash = $this->codeHash($mobile_number, $token, $code);
+
+    \Drupal::database()->insert('mobile_number_verification')
+      ->fields(array(
+        'token' => $token,
+        'timestamp' => $time,
+        'verification_code' => $hash,
+      ))
+      ->execute();
+
+    return $token;
   }
 
   /**

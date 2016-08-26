@@ -19,7 +19,6 @@
 
       $('.mobile-number-field .country', context).once('field-setup').each(function() {
         var $input = $(this);
-        console.log($input);
         var val = $input.val();
         $input.data('value', val);
         $input.wrap('<div class="country-select"></div>').before('<div class="mobile-number-flag"></div><span class="arrow"></span><div class="prefix"></div>');
@@ -47,6 +46,10 @@
             }
           }
         }
+      });
+      $('.mobile-number-field .send-button', context).once('field-setup').click(function(){
+        var $button = $(this);
+        $button.parent().find('[type="hidden"]').val('');
       });
 
       if (settings['mobileNumberVerificationPrompt']) {

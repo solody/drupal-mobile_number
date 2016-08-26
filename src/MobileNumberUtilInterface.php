@@ -225,6 +225,18 @@ interface MobileNumberUtilInterface {
   public function isVerified(PhoneNumber $mobile_number);
 
   /**
+   * Registers code for mobile number and returns it's token.
+   *
+   * @param \libphonenumber\PhoneNumber $mobile_number
+   *   Phone number object.
+   * @param $code
+   *   Access code.
+   * @return string
+   *   43 character token.
+   */
+  public function registerVerificationCode(PhoneNumber $mobile_number, $code);
+
+  /**
    * Generate hash given token and code.
    *
    * @param PhoneNumber $mobile_number

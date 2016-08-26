@@ -48,8 +48,15 @@ class MobileNumber extends FieldTargetBase implements ConfigurableTargetInterfac
       $values['value'] = $util->getCallableNumber($mobile_number);
       $values['local_number'] = $util->getLocalNumber($mobile_number);
       $values['country'] = $util->getCountry($mobile_number);
-      $values['verified'] = !empty($values['verified']) ? 1: 0;
       $values['tfa'] = !empty($values['tfa']) ? 1: 0;
+      if(!empty($values['verified'])) {
+        $code = $util->generateVerificationCode();
+        $token = $util->registerVerificationCode($mobile_number, $code);
+
+        $values['verification_code'] = $code;
+        $values['verification_token'] = $token;
+      }
+      $values['verified'] = 0;
     } else {
       $values = array();
     }
