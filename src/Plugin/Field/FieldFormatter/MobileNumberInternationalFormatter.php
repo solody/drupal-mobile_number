@@ -23,11 +23,11 @@ use Drupal\Core\Url;
 class MobileNumberInternationalFormatter extends FormatterBase {
 
   public $phoneDisplayFormat = 1;
-  
+
   /**
    * {@inheritdoc}
    */
-  static function defaultSettings() {
+  public static function defaultSettings() {
     return parent::defaultSettings() + array('as_link' => FALSE);
   }
 

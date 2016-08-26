@@ -2,11 +2,7 @@
 
 namespace Drupal\mobile_number\Element;
 
-use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\migrate\Plugin\migrate\destination\EntityContentBase;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\mobile_number\Exception\MobileNumberException;
 use Drupal\Core\Render\Element\FormElement;
@@ -14,7 +10,6 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\SettingsCommand;
-use Symfony\Component\Validator\ConstraintViolation;
 
 /**
  * Provides a form input element for entering an email address.
@@ -264,7 +259,7 @@ class MobileNumber extends FormElement {
   public function mobileNumberValidate($element, FormStateInterface $form_state, &$complete_form) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    
+
     $op = $this->getOp($element, $form_state);
     $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
     $tree_parents = $element['#parents'];
@@ -276,7 +271,8 @@ class MobileNumber extends FormElement {
       $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
       try {
         $mobile_number = $util->testMobileNumber($input['mobile'], $input['country-code']);
-      } catch (MobileNumberException $e) {
+      }
+      catch (MobileNumberException $e) {
         switch ($e->getCode()) {
           case MobileNumberException::ERROR_NO_NUMBER:
             if ($op) {
@@ -313,12 +309,11 @@ class MobileNumber extends FormElement {
         if ($element['#allowed_countries'] && empty($element['#allowed_countries'][$country])) {
           $form_state->setError($element['country-code'], t('The country %value provided for %field is not an allowed country.', array(
             '%value' => $util->getCountryName($country),
-            '%field' => $field_label
+            '%field' => $field_label,
           )));
         }
       }
     }
-
 
     return $element;
   }
@@ -344,7 +339,7 @@ class MobileNumber extends FormElement {
     drupal_get_messages();
     $errors = $form_state->getErrors();
 
-    foreach ($errors AS $path => $message) {
+    foreach ($errors as $path => $message) {
       if (strpos($path, implode('][', $element['#parents'])) === 0) {
         drupal_set_message($message, 'error');
       }
@@ -412,6 +407,7 @@ class MobileNumber extends FormElement {
    *   Mobile number element.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
+   *
    * @return null|string
    *   Operation name, or null if button does not belong to element.
    */
@@ -439,6 +435,7 @@ class MobileNumber extends FormElement {
    *   Form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form state.
+   *
    * @return mixed
    *   Mobile number form element.
    */
@@ -455,6 +452,7 @@ class MobileNumber extends FormElement {
    *
    * @param array $element
    *   Mobile number form element.
+   *
    * @return \libphonenumber\PhoneNumber|NULL
    *   Mobile number. Null if empty, or not valid, mobile number.
    */
@@ -466,7 +464,7 @@ class MobileNumber extends FormElement {
     if ($values) {
       return $util->getMobileNumber($values['local_number'], $values['country']);
     }
-    
+
     return NULL;
   }
 

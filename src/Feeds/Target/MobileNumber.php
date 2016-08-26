@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds\FieldTargetDefinition;
 use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
 use Drupal\feeds\Plugin\Type\Target\FieldTargetBase;
-use Drupal\mobile_number\MobileNumberUtilInterface;
 
 /**
  * Defines a mobile number field mapper.
@@ -38,17 +37,18 @@ class MobileNumber extends FieldTargetBase implements ConfigurableTargetInterfac
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $mobile_number = FALSE;
-    if(!empty($values['local_number']) && !empty($values['country'])) {
+    if (!empty($values['local_number']) && !empty($values['country'])) {
       $mobile_number = $util->getMobileNumber($values['local_number'], $values['country']);
-    }else {
+    }
+    else {
       $mobile_number = $util->getMobileNumber($values['value']);
     }
-    if($mobile_number) {
+    if ($mobile_number) {
       $values['value'] = $util->getCallableNumber($mobile_number);
       $values['local_number'] = $util->getLocalNumber($mobile_number);
       $values['country'] = $util->getCountry($mobile_number);
-      $values['tfa'] = !empty($values['tfa']) ? 1: 0;
-      if(!empty($values['verified'])) {
+      $values['tfa'] = !empty($values['tfa']) ? 1 : 0;
+      if (!empty($values['verified'])) {
         $code = $util->generateVerificationCode();
         $token = $util->registerVerificationCode($mobile_number, $code);
 
@@ -56,7 +56,8 @@ class MobileNumber extends FieldTargetBase implements ConfigurableTargetInterfac
         $values['verification_token'] = $token;
       }
       $values['verified'] = 0;
-    } else {
+    }
+    else {
       $values = array();
     }
   }

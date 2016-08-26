@@ -45,7 +45,7 @@ class MobileNumberItem extends FieldItemBase {
       'verify' => $util->isSmsEnabled() ? $util::MOBILE_NUMBER_VERIFY_OPTIONAL : MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
       'message' => $util::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
       'countries' => array(),
-      );
+    );
   }
 
   /**
@@ -125,7 +125,6 @@ class MobileNumberItem extends FieldItemBase {
       ->setLabel(t('TFA Option'))
       ->setRequired(TRUE);
 
-
     return $properties;
   }
 
@@ -137,14 +136,14 @@ class MobileNumberItem extends FieldItemBase {
     $util = \Drupal::service('mobile_number.util');
     $values = $this->getValue();
 
-    if(!empty($values['country'])) {
-      if(!empty($values['local_number'])) {
+    if (!empty($values['country'])) {
+      if (!empty($values['local_number'])) {
         $number = $values['local_number'];
       }
       $country = $values['country'];
     }
 
-    if(!$number) {
+    if (!$number) {
       $number = $values['value'];
     }
 
@@ -206,7 +205,7 @@ class MobileNumberItem extends FieldItemBase {
         '#title' => t('Use this field for two-factor authentication'),
         '#description' => t("If enabled, users will be able to choose if to use the number for two factor authentication. Only one field can be set true for this value, verification must be enabled, and the field must be of cardinality 1. Users are required to verify their number when enabling their two-factor authenticaion. <a href='https://www.drupal.org/project/tfa' target='_blank'>Two Factor Authentication</a> must be installed, as well as a supported sms provider such as <a href='https://www.drupal.org/project/smsframework' target='_blank'>SMS Framework</a>."),
         '#default_value' => $this->tfaAllowed() && $util->getTfaField() === $this->getFieldDefinition()
-            ->getName(),
+          ->getName(),
         '#disabled' => !$this->tfaAllowed(),
       );
 
@@ -226,7 +225,7 @@ class MobileNumberItem extends FieldItemBase {
       '#multiple' => TRUE,
       '#attached' => array('library' => array('mobile_number/element')),
     );
-  
+
     $element['verify'] = array(
       '#type' => 'radios',
       '#title' => t('Verification'),
@@ -240,7 +239,7 @@ class MobileNumberItem extends FieldItemBase {
       '#required' => TRUE,
       '#disabled' => !$util->isSmsEnabled(),
     );
-  
+
     $element['message'] = array(
       '#type' => 'textarea',
       '#title' => t('Verification Message'),
@@ -252,9 +251,10 @@ class MobileNumberItem extends FieldItemBase {
       '#element_validate' => array(array(
         $this,
         'fieldSettingsFormValidate',
-      )),
+      ),
+      ),
     );
-  
+
     if (\Drupal::moduleHandler()->moduleExists('token')) {
       $element['message']['#element_validate'] = array('token_element_validate');
       $element['message_token_tree']['token_tree'] = array(
@@ -296,7 +296,7 @@ class MobileNumberItem extends FieldItemBase {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $settings = $this->getSettings();
-    if(!empty(['message'])){
+    if (!empty(['message'])) {
       t($settings['message']);
     }
 
@@ -313,7 +313,7 @@ class MobileNumberItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  static function generateSampleValue(FieldDefinitionInterface $field_definition) {
+  public static function generateSampleValue(FieldDefinitionInterface $field_definition) {
     static $last_numbers = array();
 
     /** @var MobileNumberUtilInterface $util */
@@ -352,9 +352,11 @@ class MobileNumberItem extends FieldItemBase {
         case $util::MOBILE_NUMBER_VERIFY_NONE:
           $value['verified'] = 0;
           break;
+
         case $util::MOBILE_NUMBER_VERIFY_OPTIONAL:
           $value['verified'] = rand(0, 1);
           break;
+
         case $util::MOBILE_NUMBER_VERIFY_REQUIRED:
           $value['verified'] = 1;
           break;
@@ -377,12 +379,13 @@ class MobileNumberItem extends FieldItemBase {
         ->getFieldStorageDefinition()
         ->getCardinality() == 1);
   }
-  
+
   /**
    * Get mobile number object of the current item.
-   * 
+   *
    * @param bool $throw_exception
    *   Whether to throw mobile number validity exceptions.
+   *
    * @return \libphonenumber\PhoneNumber|NULL
    *   Mobile number object, or null if not valid.
    */
@@ -392,29 +395,30 @@ class MobileNumberItem extends FieldItemBase {
     $values = $this->getValue();
     $number = '';
     $country = '';
-    if(!empty($values['country'])) {
-      if(!empty($values['local_number'])) {
+    if (!empty($values['country'])) {
+      if (!empty($values['local_number'])) {
         $number = $values['local_number'];
       }
       $country = $values['country'];
     }
 
-    if(!$number && !empty($values['value'])) {
+    if (!$number && !empty($values['value'])) {
       $number = $values['value'];
     }
 
-    if($throw_exception) {
+    if ($throw_exception) {
       return $util->testMobileNumber($number, $country);
-    } else {
+    }
+    else {
       return $util->getMobileNumber($number, $country);
     }
 
   }
-  
+
   /**
-   * Is the item's mobile number verified in the field's saved values or current 
+   * Is the item's mobile number verified in the field's saved values or current
    * session.
-   * 
+   *
    * @return bool
    *   TRUE if verified, else FALSE.
    */
@@ -432,11 +436,11 @@ class MobileNumberItem extends FieldItemBase {
 
     $mobile_number = $this->getMobileNumber();
 
-    if(!$mobile_number) {
+    if (!$mobile_number) {
       return FALSE;
     }
 
-    $verified =  (bool) \Drupal::entityQuery($entity_type_id)
+    $verified = (bool) \Drupal::entityQuery($entity_type_id)
       // The id could be NULL, so we cast it to 0 in that case.
       ->condition($id_key, (int) $entity->id())
       ->condition($field_name, $util->getCallableNumber($mobile_number))
@@ -449,11 +453,11 @@ class MobileNumberItem extends FieldItemBase {
 
     return $verified;
   }
-  
+
   /**
-   * Performs verification, assuming verification token and code were set. Adds 
+   * Performs verification, assuming verification token and code were set. Adds
    * to flood if failed. Will not attempt to verify if number is already verified.
-   * 
+   *
    * @return bool|int|null
    *   TRUE if verification is successful, FALSE if wrong code provided, NULL if
    *   code or token not provided, and -1 if does not pass flood check.
@@ -465,29 +469,32 @@ class MobileNumberItem extends FieldItemBase {
     $token = $values['verification_token'];
     $code = $values['verification_code'];
 
-    if($this->isVerified()) {
+    if ($this->isVerified()) {
       return TRUE;
     }
 
     $mobile_number = $this->getMobileNumber();
 
-    if(!empty($token) && !empty($code) && $mobile_number) {
-      if($util->checkFlood($mobile_number)) {
+    if (!empty($token) && !empty($code) && $mobile_number) {
+      if ($util->checkFlood($mobile_number)) {
         return $util->verifyCode($mobile_number, $code, $token);
-      } else {
+      }
+      else {
         return -1;
       }
-    } else {
+    }
+    else {
       return NULL;
     }
   }
-  
+
   /**
    * Is mobile number unique within the entity/field. Will check verified numbers,
    * only if specificed.
-   * 
+   *
    * @param int $unique_type
    *   Unique type [MOBILE_NUMBER_UNIQUE_YES|MOBILE_NUMBER_UNIQUE_YES_VERIEID].
+   *
    * @return bool|null
    *   TRUE for is unique, false otherwise. Null if mobile number is not valid.
    */
@@ -498,7 +505,7 @@ class MobileNumberItem extends FieldItemBase {
     $entity = $this->getEntity();
     $field_name = $this->getFieldDefinition()->getName();
 
-    if(!$mobile_number = $this->getMobileNumber()) {
+    if (!$mobile_number = $this->getMobileNumber()) {
       return NULL;
     }
     $entity_type_id = $entity->getEntityTypeId();
@@ -516,12 +523,12 @@ class MobileNumberItem extends FieldItemBase {
 
     return !(bool) $query->execute();
   }
-  
+
   /**
    * Get all country options.
-   * 
+   *
    * @return array
-   *   Array of countries, with country codes as keys and country names with 
+   *   Array of countries, with country codes as keys and country names with
    *   prefix as labels.
    */
   public static function countryOptions() {
@@ -529,11 +536,11 @@ class MobileNumberItem extends FieldItemBase {
     $util = \Drupal::service('mobile_number.util');
     return $util->getCountryOptions(array(), TRUE);
   }
-  
+
   /**
-   * Boolean options for views. Because views' default boolean handler is 
+   * Boolean options for views. Because views' default boolean handler is
    * ridiculous.
-   * 
+   *
    * @return array
    *   Array of 0 => No, 1 => Yes. As it should be.
    */

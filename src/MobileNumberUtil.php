@@ -107,11 +107,12 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    */
   public function getMobileNumber($number, $country = NULL, $types = array(
     1 => 1,
-    2 => 2
+    2 => 2,
   )) {
     try {
       return $this->testMobileNumber($number, $country, $types);
-    } catch (MobileNumberException $e) {
+    }
+    catch (MobileNumberException $e) {
       return NULL;
     }
   }
@@ -121,7 +122,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    */
   public function testMobileNumber($number, $country = NULL, $types = array(
     1 => 1,
-    2 => 2
+    2 => 2,
   )) {
 
     if (!$number) {
@@ -131,7 +132,8 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     try {
       /** @var PhoneNumber $phone_number */
       $phone_number = $this->libUtil->parse($number, $country);
-    } catch (NumberParseException $e) {
+    }
+    catch (NumberParseException $e) {
       throw new MobileNumberException('Invalid number', MobileNumberException::ERROR_INVALID_NUMBER);
     }
 
@@ -323,7 +325,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       ->get('verification_secret');
     return sha1("$number$secret$token$code");
   }
-  
+
   /**
    * {@inheritdoc}
    */

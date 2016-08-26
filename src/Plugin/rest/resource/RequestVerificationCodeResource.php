@@ -3,11 +3,9 @@
 namespace Drupal\mobile_number\Plugin\rest\resource;
 
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\mobile_number\Exception\MobileNumberException;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
-use Drupal\sms\Message\SmsMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -111,15 +109,15 @@ class RequestVerificationCodeResource extends ResourceBase {
 
     $mobile_number = $this->util->testMobileNumber($number);
 
-    if(!$this->util->checkFlood($mobile_number)) {
-      throw New AccessDeniedHttpException('Too many verification attempts, please try again in a few hours.');
+    if (!$this->util->checkFlood($mobile_number)) {
+      throw new AccessDeniedHttpException('Too many verification attempts, please try again in a few hours.');
     }
 
     $message = MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE;
     $code = $this->util->generateVerificationCode();
     $token = $this->util->sendVerification($mobile_number, $message, $code);
 
-    if(!$token) {
+    if (!$token) {
       throw new HttpException(500, 'An error occurred while sending sms.');
     }
 

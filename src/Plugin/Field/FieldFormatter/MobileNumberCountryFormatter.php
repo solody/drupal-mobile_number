@@ -23,7 +23,7 @@ class MobileNumberCountryFormatter extends FormatterBase {
   /**
    * {@inheritdoc}
    */
-  static function defaultSettings() {
+  public static function defaultSettings() {
     return parent::defaultSettings() + array('type' => 'name');
   }
 

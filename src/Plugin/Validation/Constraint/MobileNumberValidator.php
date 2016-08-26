@@ -5,8 +5,6 @@ namespace Drupal\mobile_number\Plugin\Validation\Constraint;
 use Drupal\Component\Utility\Unicode;
 use Drupal\mobile_number\Exception\MobileNumberException;
 use Drupal\mobile_number\MobileNumberUtilInterface;
-use Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem;
-use Drupal\system_test\Controller\PageCacheAcceptHeaderController;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -50,12 +48,13 @@ class MobileNumberValidator extends ConstraintValidator {
       $mobile_number = $item->getMobileNumber(TRUE);
       $country = $util->getCountry($mobile_number);
       $display_number = $util->libUtil()->format($mobile_number, 2);
-      if(!in_array($util->getCountry($mobile_number), $allowed_countries) && $allowed_countries) {
+      if (!in_array($util->getCountry($mobile_number), $allowed_countries) && $allowed_countries) {
         $this->context->addViolation($constraint->allowedCountry, [
           '%value' => $util->getCountryName($country),
           '@field_name' => Unicode::strtolower($field_label),
         ]);
-      } else {
+      }
+      else {
         $bypass_verification = \Drupal::currentUser()->hasPermission('bypass mobile number verification requirement');
         $verification = $item->verify();
 
@@ -65,7 +64,7 @@ class MobileNumberValidator extends ConstraintValidator {
             '@field_name' => Unicode::strtolower($field_label),
           ]);
         }
-        elseif($verification === FALSE) {
+        elseif ($verification === FALSE) {
           $this->context->addViolation($constraint->verification, [
             '%value' => $display_number,
             '@field_name' => Unicode::strtolower($field_label),
@@ -86,7 +85,8 @@ class MobileNumberValidator extends ConstraintValidator {
           ]);
         }
       }
-    } catch (MobileNumberException $e) {
+    }
+    catch (MobileNumberException $e) {
       $this->context->addViolation($constraint->validity, [
         '%value' => $values['local_number'],
         '@entity_type' => $entity_type,

@@ -229,8 +229,9 @@ interface MobileNumberUtilInterface {
    *
    * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
-   * @param $code
+   * @param string $code
    *   Access code.
+   *
    * @return string
    *   43 character token.
    */
@@ -272,7 +273,7 @@ interface MobileNumberUtilInterface {
    *
    * @param string $number
    *   A callable number in international format.
-   * @param string$message
+   * @param string $message
    *   String message, after translation.
    *
    * @return bool

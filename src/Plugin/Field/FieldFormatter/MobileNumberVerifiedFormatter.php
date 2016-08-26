@@ -31,7 +31,7 @@ class MobileNumberVerifiedFormatter extends FormatterBase {
       /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
       if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, array())) {
         $element[$delta] = array(
-          '#markup' => '<span class="verified-status' . (!empty($item->verified) ? ' verified' : '') . '">' . (!empty($item->verified) ? (string) t('Verified') : (string) t('Not verified')) .'</span>',
+          '#markup' => '<span class="verified-status' . (!empty($item->verified) ? ' verified' : '') . '">' . (!empty($item->verified) ? (string) t('Verified') : (string) t('Not verified')) . '</span>',
         );
       }
     }

@@ -3,14 +3,11 @@
 namespace Drupal\mobile_number\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\mobile_number\Element\MobileNumber;
 use Drupal\mobile_number\MobileNumberUtilInterface;
-use Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
@@ -28,6 +25,9 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
  */
 class MobileNumberWidget extends WidgetBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function defaultSettings() {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
@@ -35,7 +35,7 @@ class MobileNumberWidget extends WidgetBase {
     return parent::defaultSettings() + array(
       'default_country' => 'US',
       'countries' => array(),
-      );
+    );
   }
 
   /**
@@ -45,7 +45,7 @@ class MobileNumberWidget extends WidgetBase {
     $element = parent::settingsForm($form, $form_state);
     $field_settings = $this->getFieldSettings();
     $field_country_validation = isset($field_settings['countries']);
-    
+
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
@@ -66,10 +66,11 @@ class MobileNumberWidget extends WidgetBase {
       '#element_validate' => array(array(
         $this,
         'settingsFormValidate',
-      )),
+      ),
+      ),
     );
 
-    if(!$field_country_validation) {
+    if (!$field_country_validation) {
       $element['countries'] = array(
         '#type' => 'select',
         '#title' => t('Allowed Countries'),
@@ -81,21 +82,21 @@ class MobileNumberWidget extends WidgetBase {
       );
     }
 
-    if($verification_enabled) {
+    if ($verification_enabled) {
     }
-  
+
     return $element;
   }
 
   /**
    * Form element validation handler; Invokes selection plugin's validation.
    *
-   * @param array $form
+   * @param array $element
    *   The form where the settings form is being included in.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state of the (entire) configuration form.
    */
-  public function settingsFormValidate(array $element, FormStateInterface $form_state){
+  public function settingsFormValidate(array $element, FormStateInterface $form_state) {
     $parents = $element['#parents'];
     array_pop($parents);
     $settings = $this->getFieldSettings();
@@ -119,7 +120,7 @@ class MobileNumberWidget extends WidgetBase {
     $util = \Drupal::service('mobile_number.util');
     $settings = $this->getFieldSettings();
     $settings += $this->getSettings() + static::defaultSettings();
-    
+
     $tfa_field = $util->getTfaField();
 
     $element += array(
@@ -155,11 +156,11 @@ class MobileNumberWidget extends WidgetBase {
     $op = MobileNumber::getOp($element, $form_state);
     $mobile_number = MobileNumber::getMobileNumber($element);
 
-    if($op == 'mobile_number_send_verification' && $util->checkFlood($mobile_number)) {
+    if ($op == 'mobile_number_send_verification' && $util->checkFlood($mobile_number)) {
       return FALSE;
     }
 
     return parent::errorElement($element, $error, $form, $form_state);
   }
-  
+
 }
