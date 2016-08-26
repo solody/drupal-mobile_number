@@ -24,15 +24,6 @@ function mobile_number_form_alter($form, $form_state, $form_id) {
 }
 
 /**
- * Implements hook_mobile_number_send_sms_callback_alter().
- */
-function mobile_number_mobile_number_send_sms_callback_alter(&$callback) {
-  if (\Drupal::moduleHandler()->moduleExists('sms')) {
-    $callback = 'mobile_number_send_sms';
-  }
-}
-
-/**
  * Sms framework integration, send sms callback.
  *
  * @param string $number

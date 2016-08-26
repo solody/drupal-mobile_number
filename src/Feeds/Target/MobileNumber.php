@@ -28,8 +28,7 @@ class MobileNumber extends FieldTargetBase implements ConfigurableTargetInterfac
       ->addProperty('local_number')
       ->addProperty('country')
       ->addProperty('tfa')
-      ->addProperty('verified')
-      ->markPropertyUnique('value');
+      ->addProperty('verified');
   }
 
   /**

@@ -223,6 +223,11 @@ class MobileNumber extends FormElement {
         '#suffix' => '</div>',
         '#name' => implode('__', $element['#parents']) . '__verify',
         '#mobile_number_op' => 'mobile_number_verify',
+        '#attributes' => array(
+          'class' => array(
+            'verify-button',
+          ),
+        ),
         '#submit' => array(),
       );
 
@@ -339,14 +344,15 @@ class MobileNumber extends FormElement {
     drupal_get_messages();
     $errors = $form_state->getErrors();
 
-    foreach($errors AS $path => $message) {
-      if(strpos($path, implode('][', $element['#parents'])) === 0) {
+    foreach ($errors AS $path => $message) {
+      if (strpos($path, implode('][', $element['#parents'])) === 0) {
         drupal_set_message($message, 'error');
-      } else {
+      }
+      else {
         unset($errors[$path]);
       }
     }
-  
+
     $mobile_number = static::getMobileNumber($element);
     $verified = FALSE;
     $verify_prompt = FALSE;
@@ -358,7 +364,7 @@ class MobileNumber extends FormElement {
       $verified = $util->isVerified($mobile_number);
       $flood_ok = $verified || $util->checkFlood($mobile_number);
 
-      if($flood_ok) {
+      if ($flood_ok) {
         if (!$verified && $op == 'mobile_number_send_verification' && !$errors) {
           $token = $util->sendVerification($mobile_number, $element['#message'], $util->generateVerificationCode(), $element['#token_data']);
           if (!$token) {
@@ -368,11 +374,10 @@ class MobileNumber extends FormElement {
           else {
             $verify_prompt = TRUE;
           }
-        } elseif (!$verified && $op == 'mobile_number_verify') {
+        }
+        elseif (!$verified && $op == 'mobile_number_verify') {
           $verify_prompt = TRUE;
         }
-      } elseif ($is_admin) {
-        drupal_set_message(t('Too many verification attempts, please try again in a few hours.'), 'error');
       }
     }
 
@@ -448,7 +453,7 @@ class MobileNumber extends FormElement {
   /**
    * Get currently entered mobile number, given the form element.
    *
-   * @param $element
+   * @param array $element
    *   Mobile number form element.
    * @return \libphonenumber\PhoneNumber|NULL
    *   Mobile number. Null if empty, or not valid, mobile number.
@@ -458,7 +463,7 @@ class MobileNumber extends FormElement {
     $util = \Drupal::service('mobile_number.util');
 
     $values = !empty($element['#value']['local_number']) ? $element['#value'] : array();
-    if($values) {
+    if ($values) {
       return $util->getMobileNumber($values['local_number'], $values['country']);
     }
     

@@ -252,12 +252,33 @@ interface MobileNumberUtilInterface {
   public function codeHash(PhoneNumber $mobile_number, $token, $code);
 
   /**
+   * Gets sms callback for sending SMS's. The callback should accept $number and $message, and returns status booleans.
+   *
+   * @return callable
+   *   SMS callback.
+   */
+  public function smsCallback();
+
+  /**
    * Checks if sms sending is enabled.
    *
    * @return bool
    *   True or false.
    */
   public function isSmsEnabled();
+
+  /**
+   * Sends an sms, based on callback provided by smsCallback().
+   *
+   * @param string $number
+   *   A callable number in international format.
+   * @param string$message
+   *   String message, after translation.
+   *
+   * @return bool
+   *   SMS callback result, TRUE = success, FALSE otherwise.
+   */
+  public function sendSms($number, $message);
 
   /**
    * Gets account mobile number if tfa was enabled for the user.

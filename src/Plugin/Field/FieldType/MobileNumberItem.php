@@ -149,29 +149,18 @@ class MobileNumberItem extends FieldItemBase {
     }
 
     if ($mobile_number = $util->getMobileNumber($number, $country)) {
-      $this->writePropertyValue('value', $util->getCallableNumber($mobile_number));
-      $this->writePropertyValue('country', $util->getCountry($mobile_number));
-      $this->writePropertyValue('local_number', $util->getLocalNumber($mobile_number));
-      $this->writePropertyValue('tfa', !empty($values['tfa']) ? 1 : 0);
-      $this->writePropertyValue('verified', $this->verify() === TRUE ? 1 : 0);
+      $this->value = $util->getCallableNumber($mobile_number);
+      $this->country = $util->getCountry($mobile_number);
+      $this->local_number = $util->getLocalNumber($mobile_number);
+      $this->tfa = !empty($values['tfa']) ? 1 : 0;
+      $this->verified = ($this->verify() === TRUE) ? 1 : 0;
     }
     else {
-      $this->writePropertyValue('value', NULL);
-      $this->writePropertyValue('local_number', NULL);
+      $this->value = NULL;
+      $this->local_number = NULL;
     }
 
     parent::preSave();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __get($name) {
-    if($name == 'verified') {
-      return $this->isVerified() ? 1 : 0;
-    }
-
-    return parent::__get($name);
   }
 
   /**
@@ -349,14 +338,9 @@ class MobileNumberItem extends FieldItemBase {
         $number_length = strlen($example);
         $number = substr($example, 0, $number_length - strlen($count)) . $count;
         if (substr($count, 0, 1) != substr($example, strlen($count) - 1, 1)) {
-          try {
-            $mobile_number = $util->testMobileNumber($number, $country);
-            break;
-          } catch (Exception $e) {
-
-          }
+          $mobile_number = $util->getMobileNumber($number, $country);
         }
-        $count++;
+        $count = ($count + 1) % pow(10, strlen($example));
       };
     }
     $value = array();

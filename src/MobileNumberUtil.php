@@ -105,11 +105,13 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMobileNumber($number, $country = NULL, $types = array(1 => 1, 2 => 2)) {
+  public function getMobileNumber($number, $country = NULL, $types = array(
+    1 => 1,
+    2 => 2
+  )) {
     try {
       return $this->testMobileNumber($number, $country, $types);
-    }
-    catch (MobileNumberException $e) {
+    } catch (MobileNumberException $e) {
       return NULL;
     }
   }
@@ -117,7 +119,10 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function testMobileNumber($number, $country = NULL, $types = array(1 => 1, 2 => 2)) {
+  public function testMobileNumber($number, $country = NULL, $types = array(
+    1 => 1,
+    2 => 2
+  )) {
 
     if (!$number) {
       throw new MobileNumberException('Empty number', MobileNumberException::ERROR_NO_NUMBER);
@@ -126,12 +131,11 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     try {
       /** @var PhoneNumber $phone_number */
       $phone_number = $this->libUtil->parse($number, $country);
-    }
-    catch (NumberParseException $e) {
+    } catch (NumberParseException $e) {
       throw new MobileNumberException('Invalid number', MobileNumberException::ERROR_INVALID_NUMBER);
     }
 
-    if($types) {
+    if ($types) {
       if (!in_array($this->libUtil->getNumberType($phone_number), $types)) {
         throw new MobileNumberException('Not a mobile number', MobileNumberException::ERROR_WRONG_TYPE);
       }
@@ -165,7 +169,8 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    * {@inheritdoc}
    */
   public function getCountry(PhoneNumber $mobile_number) {
-    return $mobile_number ? $this->libUtil()->getRegionCodeForNumber($mobile_number) : NULL;
+    return $mobile_number ? $this->libUtil()
+      ->getRegionCodeForNumber($mobile_number) : NULL;
   }
 
   /**
@@ -236,14 +241,12 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   public function sendVerification(PhoneNumber $mobile_number, $message, $code, $token_data = array()) {
     $message = t($message);
     $message = str_replace('!code', $code, $message);
-    $message = str_replace('!site_name', $this->configFactory->get('system.site')->get('name'), $message);
+    $message = str_replace('!site_name', $this->configFactory->get('system.site')
+      ->get('name'), $message);
 
     $message = $this->token->replace($message, $token_data);
 
-    $send_sms_callback = '';
-    $this->moduleHandler->alter('mobile_number_send_sms_callback', $send_sms_callback);
-
-    if (function_exists($send_sms_callback) && $send_sms_callback($this->getCallableNumber($mobile_number), $message)) {
+    if ($this->sendSms($this->getCallableNumber($mobile_number), $message)) {
       $token = $this->registerVerificationCode($mobile_number, $code);
 
       $_SESSION['mobile_number_verification'][$this->getCallableNumber($mobile_number)] = array(
@@ -262,7 +265,8 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    */
   public function registerVerificationCode(PhoneNumber $mobile_number, $code) {
     $time = time();
-    $token = \Drupal::csrfToken()->get(rand(0, 999999999) . $time . 'mobile verification token' . $this->getCallableNumber($mobile_number));
+    $token = \Drupal::csrfToken()
+      ->get(rand(0, 999999999) . $time . 'mobile verification token' . $this->getCallableNumber($mobile_number));
     $hash = $this->codeHash($mobile_number, $token, $code);
 
     \Drupal::database()->insert('mobile_number_verification')
@@ -319,18 +323,39 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       ->get('verification_secret');
     return sha1("$number$secret$token$code");
   }
+  
+  /**
+   * {@inheritdoc}
+   */
+  public function smsCallback() {
+    $module_handler = $this->moduleHandler;
+    $callback = array();
+
+    if ($module_handler->moduleExists('sms')) {
+      $callback = 'mobile_number_send_sms';
+    }
+    $module_handler->alter('mobile_number_send_sms_callback', $callback);
+    return is_callable($callback) ? $callback : FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function sendSms($number, $message) {
+    $callback = $this->smsCallback();
+
+    if (!$callback) {
+      return FALSE;
+    }
+
+    return call_user_func($callback, $number, $message);
+  }
 
   /**
    * {@inheritdoc}
    */
   public function isSmsEnabled() {
-    /** @var \Drupal\Core\Extension\ModuleHandlerInterface $module_handler */
-    $module_handler = \Drupal::service('module_handler');
-
-    $send_sms_callback = '';
-    $module_handler->alter('mobile_number_send_sms_callback', $send_sms_callback);
-
-    return $send_sms_callback ? TRUE : FALSE;
+    return $this->smsCallback() ? TRUE : FALSE;
   }
 
   /**
@@ -343,7 +368,8 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       $this->isTfaEnabled() &&
       $field_name &&
       !empty($user->get($field_name)->getValue()[0]['value']) &&
-      !empty($user->get($field_name)->getValue()[0]['tfa'])) {
+      !empty($user->get($field_name)->getValue()[0]['tfa'])
+    ) {
       return $user->get($field_name)->getValue()[0]['value'];
     }
     return '';
@@ -353,7 +379,8 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    * {@inheritdoc}
    */
   public function getTfaField() {
-    $tfa_field = $this->configFactory->get('mobile_number.settings')->get('tfa_field');
+    $tfa_field = $this->configFactory->get('mobile_number.settings')
+      ->get('tfa_field');
     $user_fields = $this->fieldMananger->getFieldDefinitions('user', 'user');
     return $this->isTfaEnabled() && !empty($user_fields[$tfa_field]) ? $tfa_field : '';
   }
@@ -362,14 +389,17 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    * {@inheritdoc}
    */
   public function setTfaField($field_name) {
-    $this->configFactory->getEditable('mobile_number.settings')->set('tfa_field', $field_name)->save(TRUE);
+    $this->configFactory->getEditable('mobile_number.settings')
+      ->set('tfa_field', $field_name)
+      ->save(TRUE);
   }
 
   /**
    * {@inheritdoc}
    */
   public function isTfaEnabled() {
-    return $this->configFactory->get('tfa.settings')->get('enabled') && $this->isSmsEnabled();
+    return $this->configFactory->get('tfa.settings')
+      ->get('enabled') && $this->isSmsEnabled();
   }
 
 }

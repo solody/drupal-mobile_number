@@ -11,7 +11,8 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
 /**
- * Validates that a mobile number of the given entity type.
+ * Validates a mobile number.
+ *
  * Validates:
  *   - Number validity
  *   - Allowed country
@@ -48,7 +49,7 @@ class MobileNumberValidator extends ConstraintValidator {
     try {
       $mobile_number = $item->getMobileNumber(TRUE);
       $country = $util->getCountry($mobile_number);
-      $display_number = $util->libUtil()->format($mobile_number, 1);
+      $display_number = $util->libUtil()->format($mobile_number, 2);
       if(!in_array($util->getCountry($mobile_number), $allowed_countries) && $allowed_countries) {
         $this->context->addViolation($constraint->allowedCountry, [
           '%value' => $util->getCountryName($country),
@@ -57,9 +58,7 @@ class MobileNumberValidator extends ConstraintValidator {
       } else {
         $bypass_verification = \Drupal::currentUser()->hasPermission('bypass mobile number verification requirement');
         $verification = $item->verify();
-        if($bypass_verification) {
-          $verification = TRUE;
-        }
+
         if ($verification === -1) {
           $this->context->addViolation($constraint->flood, [
             '%value' => $display_number,
@@ -72,7 +71,7 @@ class MobileNumberValidator extends ConstraintValidator {
             '@field_name' => Unicode::strtolower($field_label),
           ]);
         }
-        elseif (!$verification && ($tfa || $verify === MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_REQUIRED)) {
+        elseif (!$verification && !$bypass_verification && ($tfa || $verify === MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_REQUIRED)) {
           $this->context->addViolation($constraint->verifyRequired, [
             '%value' => $display_number,
             '@entity_type' => $entity_type,
