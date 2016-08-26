@@ -24,7 +24,7 @@ class MobileNumberValidator extends ConstraintValidator {
    * {@inheritdoc}
    */
   public function validate($item, Constraint $constraint) {
-    /** @var MobileNumberItem $item */
+    /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
     $values = $item->getValue();
     if ((empty($values['value']) && empty($values['local_number']))) {
       return;

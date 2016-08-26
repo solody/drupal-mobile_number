@@ -134,7 +134,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       $phone_number = $this->libUtil->parse($number, $country);
     }
     catch (NumberParseException $e) {
-      throw new MobileNumberException('Invalid number', MobileNumberException::ERROR_INVALID_NUMBER);
+      throw new MobileNumberException('Invalid number or unknown country', MobileNumberException::ERROR_INVALID_NUMBER);
     }
 
     if ($types) {
