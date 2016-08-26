@@ -104,26 +104,21 @@ class MobileNumberItem extends FieldItemBase {
 
     $properties['value'] = DataDefinition::create('string')
       ->setLabel(t('E.165 Number'))
-      ->addConstraint('Length', array('max' => 19))
-      ->setRequired(TRUE);
+      ->addConstraint('Length', array('max' => 19));
 
     $properties['country'] = DataDefinition::create('string')
       ->setLabel(t('Country Code'))
-      ->addConstraint('Length', array('max' => 3))
-      ->setRequired(TRUE);
+      ->addConstraint('Length', array('max' => 3));
 
     $properties['local_number'] = DataDefinition::create('string')
       ->setLabel(t('National Number'))
-      ->addConstraint('Length', array('max' => 15))
-      ->setRequired(TRUE);
+      ->addConstraint('Length', array('max' => 15));
 
     $properties['verified'] = DataDefinition::create('boolean')
-      ->setLabel(t('Verified Status'))
-      ->setRequired(TRUE);
+      ->setLabel(t('Verified Status'));
 
     $properties['tfa'] = DataDefinition::create('boolean')
-      ->setLabel(t('TFA Option'))
-      ->setRequired(TRUE);
+      ->setLabel(t('TFA Option'));
 
     return $properties;
   }
