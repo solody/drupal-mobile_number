@@ -5,9 +5,9 @@ namespace Drupal\mobile_number\Plugin\rest\resource;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\mobile_number\MobileNumberUtilInterface;
 use Drupal\rest\Plugin\ResourceBase;
-use Drupal\rest\ResourceResponse;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -121,8 +121,7 @@ class RequestVerificationCodeResource extends ResourceBase {
       throw new HttpException(500, 'An error occurred while sending sms.');
     }
 
-    $response = new ResourceResponse(array('verification_token' => $token), 200);
-    $response->addCacheableDependency($token);
+    $response = new Response(json_encode(array('verification_token' => $token)));
 
     return $response;
   }
