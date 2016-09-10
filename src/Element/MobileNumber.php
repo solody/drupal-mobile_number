@@ -148,13 +148,11 @@ class MobileNumber extends FormElement {
     $default_country = $element['#default_value']['country'];
 
     if (!empty($value['value']) && $mobile_number = $util->getMobileNumber($value['value'])) {
-      $verified = ($element['#verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) && $util->isVerified($mobile_number);
+      $verified = ($element['#verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) && static::isVerified($element);
       $default_country = $util->getCountry($mobile_number);
       $country = $util->getCountry($mobile_number);
       $countries += $util->getCountryOptions(array($country => $country));
     }
-
-    $verified = $verified || (!empty($element['#default_value']['verified']) && !empty($value['value']) && $value['value'] == $element['#default_value']['value']);
 
     $element['country-code'] = array(
       '#type' => 'select',
@@ -349,6 +347,7 @@ class MobileNumber extends FormElement {
     }
 
     $mobile_number = static::getMobileNumber($element);
+    $default_mobile_number = static::getMobileNumber($element, FALSE);
     $verified = FALSE;
     $verify_prompt = FALSE;
     $flood_ok = TRUE;
@@ -356,7 +355,7 @@ class MobileNumber extends FormElement {
       ->hasPermission('bypass mobile number verification requirement');
     $token = !empty($element['#value']['verification_token']) ? $element['#value']['verification_token'] : FALSE;
     if ($mobile_number) {
-      $verified = $util->isVerified($mobile_number);
+      $verified = static::isVerified($element);
       $flood_ok = $verified || $util->checkFlood($mobile_number);
 
       if ($flood_ok) {
@@ -452,20 +451,41 @@ class MobileNumber extends FormElement {
    *
    * @param array $element
    *   Mobile number form element.
+   * @param bool $input_value
+   *   Whether to use the input value or the default value, TRUE = input value.
    *
    * @return \libphonenumber\PhoneNumber|NULL
    *   Mobile number. Null if empty, or not valid, mobile number.
    */
-  public static function getMobileNumber($element) {
+  public static function getMobileNumber($element, $input_value = TRUE) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
-    $values = !empty($element['#value']['local_number']) ? $element['#value'] : array();
+    if($input_value) {
+      $values = !empty($element['#value']['local_number']) ? $element['#value'] : array();
+    } else {
+      $values = !empty($element['#default_value']['local_number']) ? $element['#default_value'] : array();
+    }
     if ($values) {
       return $util->getMobileNumber($values['local_number'], $values['country']);
     }
 
     return NULL;
+  }
+
+  public static function isVerified($element) {
+    /** @var MobileNumberUtilInterface $util */
+    $util = \Drupal::service('mobile_number.util');
+
+    $mobile_number = static::getMobileNumber($element);
+    $default_mobile_number = static::getMobileNumber($element, FALSE);
+    $verified = FALSE;
+    if ($mobile_number) {
+      $verified = ($default_mobile_number ? $util->getCallableNumber($default_mobile_number) == $util->getCallableNumber($mobile_number) : FALSE) && $element['#default_value']['verified'];
+      $verified = $verified || $util->isVerified($mobile_number);
+    }
+
+    return $verified;
   }
 
 }
