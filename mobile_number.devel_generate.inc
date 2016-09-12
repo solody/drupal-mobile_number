@@ -47,7 +47,7 @@ function _mobile_number_devel_generate($object, $field, $instance, $bundle) {
   $count = $last['count'];
 
   if ($example) {
-    while (strlen($count) <= strlen($example)) {
+    while (strlen($count) <= strlen($example) && !$mobile_number) {
       $number_length = strlen($example);
       $number = substr($example, 0, $number_length - strlen($count)) . $count;
       if (substr($count, 0, 1) != substr($example, strlen($count) - 1, 1)) {
