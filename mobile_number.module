@@ -26,7 +26,6 @@ function mobile_number_menu() {
  * Implements hook_form_alter().
  */
 function mobile_number_form_alter($form, $form_state) {
-  $a = 1;
 }
 
 /**
