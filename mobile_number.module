@@ -36,14 +36,14 @@ function mobile_number_form_alter($form, $form_state, $form_id) {
  */
 function mobile_number_send_sms($number, $message) {
   /** @var \Drupal\sms\Provider\DefaultSmsProvider $sms_provider */
-  $sms_provider = \Drupal::service('sms_provider');
+  $sms_provider = \Drupal::service('sms.provider');
   try {
     $sms_message = new SmsMessage(NULL, [$number], $message);
 
     /** @var \Drupal\sms\Message\SmsMessageResultInterface $result */
     $result = $sms_provider->send($sms_message)[0];
 
-    return $result->getStatus();
+    return $result->getResult()->getReport($number)->getStatus();
   }
   catch (RecipientRouteException $e) {
     return FALSE;
