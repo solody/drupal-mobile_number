@@ -40,7 +40,7 @@
           $input.data('value', country.toLowerCase());
 
           var options = $input.get(0).options;
-          for (var i in options) {
+          for (var i = 0; i < options.length; i++) {
             if (options[i].value == country) {
               var prefix = options[i].label.match(/(\d+)/)[0];
               $input.parents('.country-select').find('.prefix').text('(+' + prefix + ')');
