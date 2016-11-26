@@ -28,7 +28,8 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
    */
   public function setUp() {
     parent::setUp(array(
-      'mobile_number_test',
+      'mobile_number',
+      'sms',
     ));
   }
 
