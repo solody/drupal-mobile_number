@@ -507,11 +507,12 @@ function mobile_number_field_validate($entity_type, $entity, $field, $instance, 
           $numbers[$value['value']] = TRUE;
         }
         if ($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED && $value['verified']) {
-          if (!empty($numbers[$value['value']])) {
+          if (!empty($all_numbers[$value['value']])) {
             $duplicates = TRUE;
           }
           $numbers[$value['value']] = TRUE;
         }
+        $all_numbers[$value['value']] = TRUE;
       }
 
       if ($duplicates) {
@@ -906,19 +907,19 @@ function mobile_number_element_validate($element, &$form_state) {
           }
           break;
 
-        case MobileNumber::ERROR_INVLAID_NUMBER:
+        case MobileNumber::ERROR_INVALID_NUMBER:
         case MobileNumber::ERROR_WRONG_TYPE:
           $errors[$field_path . '][mobile'] = t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
             '%value' => $input['mobile'],
             '%field' => $field_label,
-            '%country' => $countries[$input['country-code']],
+            '%country' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
           ));
 
           break;
 
         case MobileNumber::ERROR_WRONG_COUNTRY:
           $errors[$field_path . '][mobile'] = t('The country %value provided for %field does not match the mobile number prefix.', array(
-            '%value' => $countries[$input['country-code']],
+            '%value' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
             '%field' => $field_label,
           ));
           break;
@@ -954,7 +955,7 @@ function mobile_number_element_validate($element, &$form_state) {
         '%field' => $field_label,
       ));
     }
-    elseif (!$op && !empty($input['tfa']) && !$verified) {
+    elseif (!$op && !empty($element['#tfa']) && !empty($input['tfa']) && !$verified) {
       $errors[$field_path . '][tfa'] = t('%field verification is required for enabling two-factor authentication.', array(
         '%field' => $field_label,
       ));
@@ -967,9 +968,15 @@ function mobile_number_element_validate($element, &$form_state) {
 
     if ($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
       $field_query->fieldCondition($element['#field_name'], 'verified', 1);
+      if($verified) {
+        $result = $field_query->execute();
+      } else {
+        $result = FALSE;
+      }
+    } else {
+      $result = $field_query->execute();
     }
-
-    $result = $field_query->execute();
+    
 
     if ($result) {
       $errors[$field_path . '][mobile'] = t('The number for %field already exists. It must be unique.', array(

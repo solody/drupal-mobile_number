@@ -19,7 +19,7 @@ use libphonenumber\PhoneNumberFormat;
  */
 class MobileNumber implements MobileNumberInterface {
 
-  const ERROR_INVLAID_NUMBER = 1;
+  const ERROR_INVALID_NUMBER = 1;
   const ERROR_WRONG_TYPE = 2;
   const ERROR_WRONG_COUNTRY = 3;
   const ERROR_NO_NUMBER = 4;
@@ -87,7 +87,7 @@ class MobileNumber implements MobileNumberInterface {
       $phone_number = $this->libUtil->parse($number, $country);
     }
     catch (\Exception $e) {
-      throw new \Exception('Invalid number', $this::ERROR_INVLAID_NUMBER);
+      throw new \Exception('Invalid number', $this::ERROR_INVALID_NUMBER);
     }
 
     if ($types) {
@@ -209,17 +209,7 @@ class MobileNumber implements MobileNumberInterface {
     }
 
     if (mobile_number_send_sms($this->callableNumber, $message)) {
-      $time = time();
-      $token = drupal_get_token(rand(0, 999999999) . $time . 'mobile verification token' . $this->callableNumber);
-      $hash = $this->codeHash($token, $code, $this->callableNumber);
-
-      db_insert('mobile_number_verification')
-        ->fields(array(
-          'token' => $token,
-          'timestamp' => $time,
-          'verification_code' => $hash,
-        ))
-        ->execute();
+      $token = $this->registerVerificationCode($code, $this->callableNumber);
 
       $_SESSION['mobile_number_verification'][$this->callableNumber] = array(
         'token' => $token,
@@ -230,6 +220,25 @@ class MobileNumber implements MobileNumberInterface {
     }
 
     return FALSE;
+  }
+  
+  /**
+   * {@inheritdoc}
+   */
+  public static function registerVerificationCode($code, $number) {
+    $time = time();
+    $token = drupal_get_token(rand(0, 999999999) . $time . 'mobile verification token' . $number);
+    $hash = static::codeHash($token, $code, $number);
+    
+    db_insert('mobile_number_verification')
+      ->fields(array(
+        'token' => $token,
+        'timestamp' => $time,
+        'verification_code' => $hash,
+      ))
+      ->execute();
+    
+    return $token;
   }
 
   /**

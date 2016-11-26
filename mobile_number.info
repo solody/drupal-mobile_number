@@ -7,4 +7,8 @@ files[] = src/MobileNumberInterface.php
 files[] = src/MobileNumber.php
 files[] = src/MobileNumberTfa.php
 
+files[] = tests/mobile_number.element.test
+files[] = tests/mobile_number.class.test
+files[] = tests/mobile_number.field.test
+
 dependencies[] = 'libraries'

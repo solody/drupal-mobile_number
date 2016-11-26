@@ -1,0 +1,9 @@
+name = "Mobile Number tests"
+description = "Support module for mobile number related testing."
+package = Testing
+version = VERSION
+core = 7.x
+hidden = TRUE
+
+dependencies[] = 'mobile_number'
+dependencies[] = 'smsframework:sms'

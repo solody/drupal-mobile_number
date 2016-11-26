@@ -22,6 +22,17 @@ interface MobileNumberInterface {
    *   Country phone number prefix (Eg. 972).
    */
   public static function getCountryCode($country);
+  
+  /**
+   * Gets the country name a country code.
+   *
+   * @param string $country
+   *   Country code (Eg. IL).
+   *
+   * @return int
+   *   Country display name.
+   */
+  public static function getCountryName($country);
 
   /**
    * Checks whether there were too many verifications attempted with the current number.
@@ -52,6 +63,19 @@ interface MobileNumberInterface {
    *   Code in length of $length.
    */
   public static function generateVerificationCode($length = 4);
+  
+  /**
+   * Registers code for mobile number and returns it's token.
+   *
+   * @param string $code
+   *   Access code.
+   * @param string $number
+   *   Phone number string.
+   *
+   * @return string
+   *   43 character token.
+   */
+  public static function registerVerificationCode($code, $number);
 
   /**
    * Get all supported countries.
