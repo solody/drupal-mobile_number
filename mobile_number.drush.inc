@@ -30,7 +30,7 @@ function drush_mobile_number_libphonenumber_download($path = NULL) {
   if (is_dir($path)) {
     drush_log(dt('libphonenumber already present at @path. No download required.', array('@path' => $path)), 'ok');
   }
-  elseif (drush_shell_exec('wget https://github.com/giggsey/libphonenumber-for-php/archive/7.4.4.tar.gz && tar xvzf 7.4.4.tar.gz && rm 7.4.4.tar.gz && mv libphonenumber-for-php-7.4.4 %s', $path)) {
+  elseif (drush_shell_exec('wget https://github.com/giggsey/libphonenumber-for-php/archive/8.0.tar.gz && tar xvzf 8.0.tar.gz && rm 8.0.tar.gz && mv libphonenumber-for-php-8.0 %s', $path)) {
     drush_log(dt('libphonenumber has been downloaded via wget to @path.', array('@path' => $path)), 'success');
   }
   else {
