@@ -47,7 +47,7 @@ class MobileNumber extends FormElement {
         array($this, 'mobileNumberValidate'),
       ),
       '#allowed_countries' => array(),
-      '#verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL,
+      '#verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
       '#message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
       '#tfa' => NULL,
       '#token_data' => array(),
