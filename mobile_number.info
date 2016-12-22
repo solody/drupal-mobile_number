@@ -12,3 +12,5 @@ files[] = tests/mobile_number.class.test
 files[] = tests/mobile_number.field.test
 
 dependencies[] = 'libraries'
+
+test_dependencies[] = smsframework:sms

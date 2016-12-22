@@ -5,8 +5,10 @@
  * Test cases file.
  */
 
+include DRUPAL_ROOT . '/vendor/autoload.php';
+
 /**
- * Class for testing mobile number field.
+ * Class for testing mobile_number field.
  */
 class MobileNumberFieldTestCase extends DrupalWebTestCase {
 
@@ -27,6 +29,7 @@ class MobileNumberFieldTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp(array(
       'mobile_number',
+      'sms',
     ));
   }
 

@@ -5,8 +5,10 @@
  * Test cases file.
  */
 
+include DRUPAL_ROOT . '/vendor/autoload.php';
+
 /**
- * Class for testing systementity module.
+ * Class for testing mobile_number class.
  */
 class MobileNumberClassTestCase extends DrupalWebTestCase {
 
@@ -29,6 +31,7 @@ class MobileNumberClassTestCase extends DrupalWebTestCase {
   public function setUp() {
     parent::setUp(array(
       'mobile_number',
+      'sms',
     ));
   }
 

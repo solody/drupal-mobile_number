@@ -1072,9 +1072,7 @@ function mobile_number_verify_ajax($form, &$form_state) {
  *   Is enabled.
  */
 function mobile_number_sms_sending_is_enabled() {
-  global $drupal_test_info;
-  $istest = !empty($drupal_test_info['test_run_id']);
-  return (mobile_number_sms_callback() || $istest) ? TRUE : FALSE;
+  return mobile_number_sms_callback() ? TRUE : FALSE;
 }
 
 /**
@@ -1090,13 +1088,6 @@ function mobile_number_sms_sending_is_enabled() {
  *   sms sending function.
  */
 function mobile_number_send_sms($number, $message) {
-  global $drupal_test_info;
-  $istest = !empty($drupal_test_info['test_run_id']);
-  
-  if($istest) {
-    return TRUE;
-  }
-  
   $callback = mobile_number_sms_callback();
 
   if (!$callback) {
