@@ -106,6 +106,7 @@ function mobile_number_uninstall() {
  */
 function mobile_number_requirements($phase) {
   $requirements = array();
+  module_load_include('inc', 'mobile_number', 'include/mobile_number.libphonenumber');
   switch ($phase) {
     case 'runtime':
       $requirements['mobile_number'] = array(
@@ -116,8 +117,8 @@ function mobile_number_requirements($phase) {
             array('attributes' => array('target' => '_blank'))
           ),
         )),
-        'severity' => libraries_get_path('libphonenumber') ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-        'value' => libraries_get_path('libphonenumber') ? t('Installed.') : t('Not installed.'),
+        'severity' => class_exists('\libphonenumber\PhoneNumberUtil') ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+        'value' => class_exists('\libphonenumber\PhoneNumberUtil') ? t('Installed.') : t('Not installed.'),
       );
       break;
   }
