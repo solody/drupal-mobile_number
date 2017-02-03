@@ -37,13 +37,13 @@ interface MobileNumberInterface {
   /**
    * Checks whether there were too many verifications attempted with the current number.
    *
-   * @param string|NULL $token
-   *   Verification token, if verification code was not sent in this session.
+   * @param string $type
+   *   Type of flood check, can be either 'sms' or 'verification'.
    *
    * @return bool
    *   FALSE for too many attempts on this mobile number, TRUE otherwise.
    */
-  public function checkFlood($token = NULL);
+  public function checkFlood($type = 'verification');
 
   /**
    * Gets token generated if verification code was sent.

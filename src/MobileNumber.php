@@ -26,7 +26,10 @@ class MobileNumber implements MobileNumberInterface {
   const VERIFY_WRONG_CODE = 5;
   const VERIFY_TOO_MANY_ATTEMPTS = 6;
   const VERIFY_SMS_FAILED = 7;
+  const VERIFY_ATTEMPTS_COUNT = 5;
   const VERIFY_ATTEMPTS_INTERVAL = 3600;
+  const SMS_ATTEMPTS_INTERVAL = 60;
+  const SMS_ATTEMPTS_COUNT = 1;
 
   /**
    * The PhoneNumberUtil object.
@@ -181,8 +184,18 @@ class MobileNumber implements MobileNumberInterface {
   /**
    * @inheritdoc
    */
-  public function checkFlood($token = NULL) {
-    return flood_is_allowed('mobile_number_verification', 5, $this::VERIFY_ATTEMPTS_INTERVAL, $this->callableNumber);
+  public function checkFlood($type = 'verification') {
+    switch ($type) {
+      case 'verification':
+        return flood_is_allowed('mobile_number_verification', $this::VERIFY_ATTEMPTS_COUNT, $this::VERIFY_ATTEMPTS_INTERVAL, $this->callableNumber);
+        break;
+      case 'sms':
+        return flood_is_allowed('mobile_number_sms', $this::SMS_ATTEMPTS_COUNT, $this::SMS_ATTEMPTS_INTERVAL, $this->callableNumber) &&
+        flood_is_allowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT*5, $this::SMS_ATTEMPTS_INTERVAL*5);
+        break;
+      default:
+        return TRUE;
+    }
   }
 
   /**
@@ -207,6 +220,9 @@ class MobileNumber implements MobileNumberInterface {
     if (module_exists('token')) {
       $message = token_replace($message, $token_data);
     }
+  
+    flood_register_event('mobile_number_sms', $this::SMS_ATTEMPTS_INTERVAL, $this->callableNumber);
+    flood_register_event('mobile_number_sms_ip', $this::SMS_ATTEMPTS_INTERVAL*5);
 
     if (mobile_number_send_sms($this->callableNumber, $message)) {
       $token = $this->registerVerificationCode($code, $this->callableNumber);
