@@ -57,10 +57,13 @@ function _webform_render_mobile_number($component, $value = NULL, $filter = TRUE
     '#type' => 'mobile_number',
     '#description' => $settings['description'],
     '#default_value' => $value ? $value : array(),
-    '#allowed_countries' => $settings['countries'],
-    '#verify' => mobile_number_sms_sending_is_enabled() ? $settings['verify'] : MOBILE_NUMBER_VERIFY_NONE,
-    '#message' => $settings['message'],
-    '#token_data' => !empty($node) ? array('node' => $node) : array(),
+    '#mobile_number' => array(
+      'allowed_countries' => $settings['countries'],
+      'verify' => mobile_number_sms_sending_is_enabled() ? $settings['verify'] : MOBILE_NUMBER_VERIFY_NONE,
+      'message' => $settings['message'],
+      'token_data' => !empty($node) ? array('node' => $node) : array(),
+      'placeholder' => !empty($settings['placeholder']) ? $settings['placeholder'] : '',
+    ),
   );
 
   $element['#default_value'] += array('country' => $settings['default_country']);

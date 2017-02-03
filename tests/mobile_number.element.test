@@ -62,6 +62,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
       '#type' => 'mobile_number',
       '#title' => 'M',
       '#required' => TRUE,
+      '#mobile_number' => array(),
     );
 
     $input = array(
@@ -70,13 +71,13 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
     );
 
     foreach ($allowed_countries as $type => $allowed) {
-      $element['#allowed_countries'] = $allowed;
+      $element['#mobile_number']['allowed_countries'] = $allowed;
       $errors = $this->submitFormElement($element, $input);
       $success = $type == 'US' ? 'failure' : 'success';
       $this->assertTrue($errors == ($type == 'US'), "IL mobile number with $type allowed: $success.", 'Number Validity');
     }
 
-    unset($element['#allowed_countries']);
+    unset($element['#mobile_number']['allowed_countries']);
 
     foreach ($local_numbers as $ln => $local_number) {
       foreach ($countries as $c => $country) {
@@ -117,7 +118,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
     $element = array(
       '#type' => 'mobile_number',
       '#title' => 'M',
-      '#verify' => MOBILE_NUMBER_VERIFY_REQUIRED,
+      '#mobile_number' => array('verify' => MOBILE_NUMBER_VERIFY_REQUIRED),
     );
 
     $input['country-code'] = $country;
@@ -127,12 +128,12 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
 
     global $user;
     $user = $this->drupalCreateUser(array());
-
-    $element['#verify'] = MOBILE_NUMBER_VERIFY_OPTIONAL;
+  
+    $element['#mobile_number']['verify'] = MOBILE_NUMBER_VERIFY_OPTIONAL;
     $errors = $this->submitFormElement($element, $input, $value);
     $this->assertTrue(!$errors, "Optional verification allowed unverified.", 'Number Verification');
-
-    $element['#verify'] = MOBILE_NUMBER_VERIFY_REQUIRED;
+  
+    $element['#mobile_number']['verify'] = MOBILE_NUMBER_VERIFY_REQUIRED;
     foreach ($tokens as $input_token => $t) {
       foreach ($codes as $input_code => $c) {
         $input['country-code'] = $country;
@@ -175,7 +176,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
     $element = array(
       '#type' => 'mobile_number',
       '#title' => 'M',
-      '#tfa' => TRUE,
+      '#mobile_number' => array('tfa' => TRUE),
     );
 
     $input['tfa'] = 1;

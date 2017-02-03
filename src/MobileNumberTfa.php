@@ -86,9 +86,6 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationPluginInterf
       '#required' => TRUE,
       '#description' => t('A verification code was sent to %clue. Enter the @length-character code sent to your device.', array('@length' => $this->codeLength, '%clue' => $numberClue)),
     );
-    if (module_exists('elements')) {
-      $form['code']['#type'] = 'numberfield';
-    }
     $form['actions']['#type'] = 'actions';
     // @todo optionally report on when code was sent/delivered.
     $form['actions']['login'] = array(
