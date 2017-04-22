@@ -639,16 +639,18 @@ function mobile_number_form_field_ui_field_edit_form_submit($form, $form_state) 
 function mobile_number_views_data_alter(&$data) {
   $fields = field_read_fields(array('type' => 'mobile_number'));
   foreach ($fields as $field_id => $field) {
-    $table = key($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
-    $table_revision = key($field['storage']['details']['sql']['FIELD_LOAD_REVISION']);
-
-    $data[$table][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
-    $data[$table][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
-    $data[$table][$field_id . '_country']['filter']['options callback'] = 'mobile_number_views_country_options';
-
-    $data[$table_revision][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
-    $data[$table_revision][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
-    $data[$table_revision][$field_id . '_country']['filter']['options callback'] = 'mobile_number_views_country_options';
+    if(!empty($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
+      $table = key($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
+      $data[$table][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
+      $data[$table][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
+      $data[$table][$field_id . '_country']['filter']['options callback'] = 'mobile_number_views_country_options';
+    }
+    if(!empty($field['storage']['details']['sql']['FIELD_LOAD_REVISION'])) {
+      $table_revision = key($field['storage']['details']['sql']['FIELD_LOAD_REVISION']);
+      $data[$table_revision][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
+      $data[$table_revision][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
+      $data[$table_revision][$field_id . '_country']['filter']['options callback'] = 'mobile_number_views_country_options';
+    }
   }
 }
 
