@@ -461,8 +461,8 @@ class MobileNumberItem extends FieldItemBase {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $values = $this->getValue();
-    $token = $values['verification_token'];
-    $code = $values['verification_code'];
+    $token = !empty($values['verification_token']) ? $values['verification_token'] : NULL;
+    $code = !empty($values['verification_code']) ? $values['verification_code'] : NULL;
 
     if ($this->isVerified()) {
       return TRUE;
