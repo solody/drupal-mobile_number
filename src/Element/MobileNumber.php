@@ -273,7 +273,7 @@ class MobileNumber extends FormElement {
       catch (MobileNumberException $e) {
         switch ($e->getCode()) {
           case MobileNumberException::ERROR_NO_NUMBER:
-            if ($op) {
+            if (!empty($element['#required']) || $op) {
               $form_state->setError($element['mobile'], t('Phone number in %field is required.', array(
                 '%field' => $field_label,
               )));
