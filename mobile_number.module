@@ -411,7 +411,7 @@ function mobile_number_field_widget_settings_form($field, $instance) {
     '#multiple' => TRUE,
     '#attached' => array('css' => array(drupal_get_path('module', 'mobile_number') . '/css/mobile-number-form-element.css')),
   );
-  
+
   $form['placeholder'] = array(
     '#type' => 'textfield',
     '#title' => t('Number Placeholder'),
@@ -639,13 +639,13 @@ function mobile_number_form_field_ui_field_edit_form_submit($form, $form_state) 
 function mobile_number_views_data_alter(&$data) {
   $fields = field_read_fields(array('type' => 'mobile_number'));
   foreach ($fields as $field_id => $field) {
-    if(!empty($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
+    if (!empty($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
       $table = key($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
       $data[$table][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
       $data[$table][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
       $data[$table][$field_id . '_country']['filter']['options callback'] = 'mobile_number_views_country_options';
     }
-    if(!empty($field['storage']['details']['sql']['FIELD_LOAD_REVISION'])) {
+    if (!empty($field['storage']['details']['sql']['FIELD_LOAD_REVISION'])) {
       $table_revision = key($field['storage']['details']['sql']['FIELD_LOAD_REVISION']);
       $data[$table_revision][$field_id . '_verified']['filter']['handler'] = 'views_handler_filter_boolean_operator';
       $data[$table_revision][$field_id . '_country']['filter']['handler'] = 'views_handler_filter_in_operator';
@@ -998,15 +998,16 @@ function mobile_number_element_validate($element, &$form_state) {
 
     if ($unique == MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
       $field_query->fieldCondition($element['#field_name'], 'verified', 1);
-      if($verified) {
+      if ($verified) {
         $result = $field_query->execute();
-      } else {
+      }
+      else {
         $result = FALSE;
       }
-    } else {
+    }
+    else {
       $result = $field_query->execute();
     }
-    
 
     if ($result) {
       $errors[$field_path . '][mobile'] = t('The number for %field already exists. It must be unique.', array(

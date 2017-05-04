@@ -128,11 +128,11 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
 
     global $user;
     $user = $this->drupalCreateUser(array());
-  
+
     $element['#mobile_number']['verify'] = MOBILE_NUMBER_VERIFY_OPTIONAL;
     $errors = $this->submitFormElement($element, $input, $value);
     $this->assertTrue(!$errors, "Optional verification allowed unverified.", 'Number Verification');
-  
+
     $element['#mobile_number']['verify'] = MOBILE_NUMBER_VERIFY_REQUIRED;
     foreach ($tokens as $input_token => $t) {
       foreach ($codes as $input_code => $c) {

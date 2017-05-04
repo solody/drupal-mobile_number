@@ -188,11 +188,13 @@ class MobileNumber implements MobileNumberInterface {
     switch ($type) {
       case 'verification':
         return flood_is_allowed('mobile_number_verification', $this::VERIFY_ATTEMPTS_COUNT, $this::VERIFY_ATTEMPTS_INTERVAL, $this->callableNumber);
-        break;
+
+      break;
       case 'sms':
         return flood_is_allowed('mobile_number_sms', $this::SMS_ATTEMPTS_COUNT, $this::SMS_ATTEMPTS_INTERVAL, $this->callableNumber) &&
-        flood_is_allowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT*5, $this::SMS_ATTEMPTS_INTERVAL*5);
-        break;
+        flood_is_allowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT * 5, $this::SMS_ATTEMPTS_INTERVAL * 5);
+
+      break;
       default:
         return TRUE;
     }
@@ -220,9 +222,9 @@ class MobileNumber implements MobileNumberInterface {
     if (module_exists('token')) {
       $message = token_replace($message, $token_data);
     }
-  
+
     flood_register_event('mobile_number_sms', $this::SMS_ATTEMPTS_INTERVAL, $this->callableNumber);
-    flood_register_event('mobile_number_sms_ip', $this::SMS_ATTEMPTS_INTERVAL*5);
+    flood_register_event('mobile_number_sms_ip', $this::SMS_ATTEMPTS_INTERVAL * 5);
 
     if (mobile_number_send_sms($this->callableNumber, $message)) {
       $token = $this->registerVerificationCode($code, $this->callableNumber);
@@ -237,7 +239,7 @@ class MobileNumber implements MobileNumberInterface {
 
     return FALSE;
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -245,7 +247,7 @@ class MobileNumber implements MobileNumberInterface {
     $time = time();
     $token = drupal_get_token(rand(0, 999999999) . $time . 'mobile verification token' . $number);
     $hash = static::codeHash($token, $code, $number);
-    
+
     db_insert('mobile_number_verification')
       ->fields(array(
         'token' => $token,
@@ -253,7 +255,7 @@ class MobileNumber implements MobileNumberInterface {
         'verification_code' => $hash,
       ))
       ->execute();
-    
+
     return $token;
   }
 

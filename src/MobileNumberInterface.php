@@ -22,7 +22,7 @@ interface MobileNumberInterface {
    *   Country phone number prefix (Eg. 972).
    */
   public static function getCountryCode($country);
-  
+
   /**
    * Gets the country name a country code.
    *
@@ -63,7 +63,7 @@ interface MobileNumberInterface {
    *   Code in length of $length.
    */
   public static function generateVerificationCode($length = 4);
-  
+
   /**
    * Registers code for mobile number and returns it's token.
    *
