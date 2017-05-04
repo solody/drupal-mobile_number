@@ -24,9 +24,8 @@ div.mobile-number-field div.form-item {
 
 .mobile-number-field .mobile-number-flag {
   box-sizing: border-box;
-  padding: 9px 0px 0px;
+  padding: 9px 0 0;
   padding-left: 16px;
-  width: 0;
   height: 11px;
   background-image: url("../images/flags.png");
   background-repeat: no-repeat;
@@ -86,7 +85,7 @@ div.mobile-number-field div.form-item {
   z-index: 1;
 }
 .mobile-number-field .description {
-  margin: 5px 0px;
+  margin: 5px 0;
 }
 .mobile-number-field .verification,
 .mobile-number-field .send-button {
