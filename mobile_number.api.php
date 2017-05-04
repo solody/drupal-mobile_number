@@ -11,8 +11,8 @@
  * Only one sms callback can be defined and it's with this hook.
  *
  * The callback gets the arguments:
- * - $phone_number (string, international format)
- * - $message (string)
+ * - string $phone_number (string, international format)
+ * - string $message (string)
  *
  * If an sms module has a function with these two needed arguments, then here is
  * where it should be defined, otherwise a wrapper function can be used.

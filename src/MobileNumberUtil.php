@@ -222,8 +222,18 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function checkFlood(PhoneNumber $mobile_number, $token = NULL) {
-    return $this->flood->isAllowed('mobile_number_verification', 5, $this::VERIFY_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number));
+  public function checkFlood(PhoneNumber $mobile_number, $type = 'verification') {
+    switch ($type) {
+      case 'verification':
+        return $this->flood->isAllowed('mobile_number_verification', $this::VERIFY_ATTEMPTS_COUNT, $this::VERIFY_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number));
+        break;
+      case 'sms':
+        return $this->flood->isAllowed('mobile_number_sms', $this::SMS_ATTEMPTS_COUNT, $this::SMS_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number)) &&
+          $this->flood->isAllowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT*5, $this::SMS_ATTEMPTS_INTERVAL*5);
+        break;
+      default:
+        return TRUE;
+    }
   }
 
   /**
@@ -247,6 +257,9 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       ->get('name'), $message);
 
     $message = $this->token->replace($message, $token_data);
+    
+    $this->flood->register('mobile_number_sms', $this::SMS_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number));
+    $this->flood->register('mobile_number_sms_ip', $this::SMS_ATTEMPTS_INTERVAL * 5);
 
     if ($this->sendSms($this->getCallableNumber($mobile_number), $message)) {
       $token = $this->registerVerificationCode($mobile_number, $code);

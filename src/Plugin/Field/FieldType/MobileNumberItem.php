@@ -436,7 +436,6 @@ class MobileNumberItem extends FieldItemBase {
     }
 
     $verified = (bool) \Drupal::entityQuery($entity_type_id)
-      // The id could be NULL, so we cast it to 0 in that case.
       ->condition($id_key, (int) $entity->id())
       ->condition($field_name, $util->getCallableNumber($mobile_number))
       ->range(0, 1)
@@ -514,9 +513,16 @@ class MobileNumberItem extends FieldItemBase {
 
     if ($unique_type == MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
       $query->condition("$field_name.verified", "1");
+      if($this->isVerified()) {
+        $result = !(bool) $query->execute();
+      } else {
+        $result = TRUE;
+      }
+    } else {
+      $result = !(bool) $query->execute();
     }
 
-    return !(bool) $query->execute();
+    return $result;
   }
 
   /**

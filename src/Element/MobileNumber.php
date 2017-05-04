@@ -109,17 +109,23 @@ class MobileNumber extends FormElement {
     $field_path = implode('][', $element['#parents']);
     $id = $element['#id'];
     $element += array(
-      '#allowed_countries' => array(),
       '#default_value' => array(),
-      '#verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
-      '#message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-      '#tfa' => FALSE,
-      '#token_data' => array(),
+      '#mobile_number' => array(),
     );
+    
+    $element['#mobile_number'] += array(
+      'allowed_countries' => array(),
+      'verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
+      'message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
+      'tfa' => FALSE,
+      'token_data' => array(),
+      'placeholder' => NULL,
+      );
+    $settings = $element['#mobile_number'];
 
     $element['#default_value'] += array(
       'value' => '',
-      'country' => (count($element['#allowed_countries']) == 1) ? key($element['#allowed_countries']) : 'US',
+      'country' => (count($settings['allowed_countries']) == 1) ? key($settings['allowed_countries']) : 'US',
       'local_number' => '',
       'verified' => 0,
       'tfa' => 0,
@@ -143,12 +149,12 @@ class MobileNumber extends FormElement {
 
     $mobile_number = NULL;
     $verified = FALSE;
-    $countries = $util->getCountryOptions($element['#allowed_countries'], TRUE);
+    $countries = $util->getCountryOptions($settings['allowed_countries'], TRUE);
     $countries += $util->getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']), TRUE);
     $default_country = $element['#default_value']['country'];
 
     if (!empty($value['value']) && $mobile_number = $util->getMobileNumber($value['value'])) {
-      $verified = ($element['#verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) && static::isVerified($element);
+      $verified = ($settings['verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) && static::isVerified($element);
       $default_country = $util->getCountry($mobile_number);
       $country = $util->getCountry($mobile_number);
       $countries += $util->getCountryOptions(array($country => $country));
@@ -173,13 +179,13 @@ class MobileNumber extends FormElement {
       '#suffix' => '<div class="form-item verified ' . ($verified ? 'show' : '') . '" title="' . t('Verified') . '"><span>' . t('Verified') . '</span></div>',
       '#attributes' => array(
         'class' => array('local-number'),
-        'placeholder' => t('Phone number'),
+        'placeholder' => isset($settings['placeholder']) ? $settings['placeholder'] : t('Phone number'),
       ),
     );
 
     $element['mobile']['#attached']['library'][] = 'mobile_number/element';
 
-    if ($element['#verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) {
+    if ($settings['verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) {
       $element['send_verification'] = array(
         '#type' => 'button',
         '#value' => t('Send verification code'),
@@ -224,7 +230,7 @@ class MobileNumber extends FormElement {
         '#submit' => array(),
       );
 
-      if (!empty($element['#tfa'])) {
+      if (!empty($settings['tfa'])) {
         $element['tfa'] = array(
           '#type' => 'checkbox',
           '#title' => t('Enable two-factor authentication'),
@@ -257,7 +263,8 @@ class MobileNumber extends FormElement {
   public function mobileNumberValidate($element, FormStateInterface $form_state, &$complete_form) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-
+  
+    $settings = $element['#mobile_number'];
     $op = $this->getOp($element, $form_state);
     $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
     $tree_parents = $element['#parents'];
@@ -266,7 +273,7 @@ class MobileNumber extends FormElement {
     $mobile_number = NULL;
     $countries = $util->getCountryOptions(array(), TRUE);
     if ($input) {
-      $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
+      $input += count($settings['allowed_countries']) == 1 ? array('country-code' => key($settings['allowed_countries'])) : array();
       try {
         $mobile_number = $util->testMobileNumber($input['mobile'], $input['country-code']);
       }
@@ -285,14 +292,14 @@ class MobileNumber extends FormElement {
             $form_state->setError($element['mobile'], t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
               '%value' => $input['mobile'],
               '%field' => $field_label,
-              '%country' => $countries[$input['country-code']],
+              '%country' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
             )));
 
             break;
 
           case MobileNumberException::ERROR_WRONG_COUNTRY:
             $form_state->setError($element['mobile'], t('The country %value provided for %field does not match the mobile number prefix.', array(
-              '%value' => $countries[$input['country-code']],
+              '%value' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
               '%field' => $field_label,
             )));
             break;
@@ -301,10 +308,10 @@ class MobileNumber extends FormElement {
     }
 
     if (!empty($input['mobile'])) {
-      $input += count($element['#allowed_countries']) == 1 ? array('country-code' => key($element['#allowed_countries'])) : array();
+      $input += count($settings['allowed_countries']) == 1 ? array('country-code' => key($settings['allowed_countries'])) : array();
       if ($mobile_number = $util->getMobileNumber($input['mobile'], $input['country-code'])) {
         $country = $util->getCountry($mobile_number);
-        if ($element['#allowed_countries'] && empty($element['#allowed_countries'][$country])) {
+        if ($settings['allowed_countries'] && empty($settings['allowed_countries'][$country])) {
           $form_state->setError($element['country-code'], t('The country %value provided for %field is not an allowed country.', array(
             '%value' => $util->getCountryName($country),
             '%field' => $field_label,
@@ -332,6 +339,7 @@ class MobileNumber extends FormElement {
     $util = \Drupal::service('mobile_number.util');
 
     $element = static::getTriggeringElementParent($complete_form, $form_state);
+    $settings = $element['#mobile_number'];
     $op = static::getOp($element, $form_state);
 
     drupal_get_messages();
@@ -356,11 +364,11 @@ class MobileNumber extends FormElement {
     $token = !empty($element['#value']['verification_token']) ? $element['#value']['verification_token'] : FALSE;
     if ($mobile_number) {
       $verified = static::isVerified($element);
-      $flood_ok = $verified || $util->checkFlood($mobile_number);
+      $verify_flood_ok = $verified || ($util->checkFlood($mobile_number));
 
-      if ($flood_ok) {
-        if (!$verified && $op == 'mobile_number_send_verification' && !$errors) {
-          $token = $util->sendVerification($mobile_number, $element['#message'], $util->generateVerificationCode(), $element['#token_data']);
+      if ($verify_flood_ok) {
+        if (!$verified && !$errors && $op == 'mobile_number_send_verification' && $util->checkFlood($mobile_number, 'sms')) {
+          $token = $util->sendVerification($mobile_number, $settings['message'], $util->generateVerificationCode(), $settings['token_data']);
           if (!$token) {
             drupal_set_message(t('An error occurred while sending sms.'), 'error');
             $verify_prompt = FALSE;

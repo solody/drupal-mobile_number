@@ -20,7 +20,11 @@ interface MobileNumberUtilInterface {
   const MOBILE_NUMBER_DEFAULT_SMS_MESSAGE = "Your verification code from !site_name:\n!code";
 
   const VERIFY_ATTEMPTS_INTERVAL = 3600;
-
+  const VERIFY_ATTEMPTS_COUNT = 5;
+  const SMS_ATTEMPTS_INTERVAL = 60;
+  const SMS_ATTEMPTS_COUNT = 1;
+  
+  
   /**
    * Specifies the mobile number was verified.
    */
@@ -138,13 +142,13 @@ interface MobileNumberUtilInterface {
    *
    * @param PhoneNumber $mobile_number
    *   Phone number object.
-   * @param string|NULL $token
-   *   Verification token, if verification code was not sent in this session.
+   * @param string $type
+   *   Flood type, 'sms' or 'verification'.
    *
    * @return bool
    *   FALSE for too many attempts on this mobile number, TRUE otherwise.
    */
-  public function checkFlood(PhoneNumber $mobile_number, $token = NULL);
+  public function checkFlood(PhoneNumber $mobile_number, $type = 'verification');
 
   /**
    * Gets token generated if verification code was sent.
