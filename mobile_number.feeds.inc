@@ -2,8 +2,7 @@
 
 /**
  * @file
- * On behalf implementation of Feeds mapping API for file.module and
- * image.module.
+ * Implementation of Feeds mapping API for mobile_number.module.
  */
 
 /**

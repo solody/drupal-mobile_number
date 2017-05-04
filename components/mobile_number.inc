@@ -114,7 +114,12 @@ function _webform_csv_headers_mobile_number($component, $export_options) {
   $header = array();
   $header[0] = array('', '', '', '');
   $header[1] = array($export_options['header_keys'] ? $component['form_key'] : $component['name'], '');
-  $header[2] = array(t('International Number'), t('Country'), t('Local Number'), t('Verified'));
+  $header[2] = array(
+    t('International Number'),
+    t('Country'),
+    t('Local Number'),
+    t('Verified'),
+  );
   return $header;
 }
 

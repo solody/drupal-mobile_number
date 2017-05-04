@@ -126,7 +126,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function toArray() {
     return array(
@@ -138,7 +138,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public static function getCountryCode($country) {
     $libUtil = PhoneNumberUtil::getInstance();
@@ -146,7 +146,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public static function getCountryOptions($filter = array(), $show_country_names = FALSE) {
     $libUtil = PhoneNumberUtil::getInstance();
@@ -166,7 +166,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public static function getCountryName($country) {
     include_once DRUPAL_ROOT . '/includes/locale.inc';
@@ -175,33 +175,31 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public static function generateVerificationCode($length = 4) {
     return str_pad((string) rand(0, pow(10, $length)), $length, '0', STR_PAD_LEFT);
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function checkFlood($type = 'verification') {
     switch ($type) {
       case 'verification':
         return flood_is_allowed('mobile_number_verification', $this::VERIFY_ATTEMPTS_COUNT, $this::VERIFY_ATTEMPTS_INTERVAL, $this->callableNumber);
 
-      break;
       case 'sms':
         return flood_is_allowed('mobile_number_sms', $this::SMS_ATTEMPTS_COUNT, $this::SMS_ATTEMPTS_INTERVAL, $this->callableNumber) &&
         flood_is_allowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT * 5, $this::SMS_ATTEMPTS_INTERVAL * 5);
 
-      break;
       default:
         return TRUE;
     }
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function getToken() {
     if (!empty($_SESSION['mobile_number_verification'][$this->callableNumber]['token'])) {
@@ -212,7 +210,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function sendVerification($message, $code, $token_data = array()) {
     $message = t($message, array(
@@ -260,7 +258,7 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function verifyCode($code, $token = NULL) {
     if ($code && ($this->getToken() || $token)) {
@@ -287,14 +285,14 @@ class MobileNumber implements MobileNumberInterface {
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public function isVerified() {
     return !empty($_SESSION['mobile_number_verification'][$this->callableNumber]['verified']);
   }
 
   /**
-   * @inheritdoc
+   * {@inheritdoc}
    */
   public static function codeHash($token, $code, $number) {
     $secret = variable_get('mobile_number_secret', '');

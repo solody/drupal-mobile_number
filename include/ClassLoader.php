@@ -57,7 +57,7 @@ class ClassLoader {
   private $classMapAuthoritative = FALSE;
 
   /**
-   *
+   * GetPrefixes.
    */
   public function getPrefixes() {
 
@@ -69,7 +69,7 @@ class ClassLoader {
   }
 
   /**
-   *
+   * GetPrefixesPsr4.
    */
   public function getPrefixesPsr4() {
 
@@ -77,7 +77,7 @@ class ClassLoader {
   }
 
   /**
-   *
+   * GetFallbackDirs.
    */
   public function getFallbackDirs() {
 
@@ -85,7 +85,7 @@ class ClassLoader {
   }
 
   /**
-   *
+   * GetFallbackDirsPsr4.
    */
   public function getFallbackDirsPsr4() {
 
@@ -93,7 +93,7 @@ class ClassLoader {
   }
 
   /**
-   *
+   * GetClassMap.
    */
   public function getClassMap() {
 
@@ -101,8 +101,10 @@ class ClassLoader {
   }
 
   /**
+   * AddClassMap.
+   *
    * @param array $classMap
-   *   Class to filename map
+   *   Class to filename map.
    */
   public function addClassMap(array $classMap) {
 
@@ -115,17 +117,14 @@ class ClassLoader {
   }
 
   /**
-   * Registers a set of PSR-0 directories for a given prefix, either
-   * appending or prepending to the ones previously set for this prefix.
+   * Registers a set of PSR-0 directories for a given prefix, either appending or prepending to the ones previously set for this prefix.
    *
-   * @param string $prefixThe
-   *   prefix
-   *   The prefix
+   * @param string $prefix
+   *   The prefix.
    * @param array|string $paths
-   *   The PSR-0 root directories
-   * @param bool $prependWhether
-   *   to prepend the directories
-   *   Whether to prepend the directories
+   *   The PSR-0 root directories.
+   * @param bool $prepend
+   *   Whether to prepend the directories.
    */
   public function add($prefix, $paths, $prepend = FALSE) {
 
@@ -167,17 +166,14 @@ class ClassLoader {
   }
 
   /**
-   * Registers a set of PSR-4 directories for a given namespace, either
-   * appending or prepending to the ones previously set for this namespace.
+   * Registers a set of PSR-4 directories for a given namespace, either appending or prepending to the ones previously set for this namespace.
    *
-   * @param string $prefixThe
-   *   prefix/namespace, with trailing '\\'
-   *   The prefix/namespace, with trailing '\\'
+   * @param string $prefix
+   *   The prefix/namespace, with trailing '\\'.
    * @param array|string $paths
-   *   The PSR-4 base directories
-   * @param bool $prependWhether
-   *   to prepend the directories
-   *   Whether to prepend the directories
+   *   The PSR-4 base directories.
+   * @param bool $prepend
+   *   Whether to prepend the directories.
    *
    * @throws \InvalidArgumentException
    */
@@ -224,14 +220,12 @@ class ClassLoader {
   }
 
   /**
-   * Registers a set of PSR-0 directories for a given prefix,
-   * replacing any others previously set for this prefix.
+   * Registers a set of PSR-0 directories for a given prefix, replacing any others previously set for this prefix.
    *
-   * @param string $prefixThe
-   *   prefix
-   *   The prefix
+   * @param string $prefix
+   *   The prefix.
    * @param array|string $paths
-   *   The PSR-0 base directories
+   *   The PSR-0 base directories.
    */
   public function set($prefix, $paths) {
 
@@ -244,14 +238,12 @@ class ClassLoader {
   }
 
   /**
-   * Registers a set of PSR-4 directories for a given namespace,
-   * replacing any others previously set for this namespace.
+   * Registers a set of PSR-4 directories for a given namespace, replacing any others previously set for this namespace.
    *
-   * @param string $prefixThe
-   *   prefix/namespace, with trailing '\\'
-   *   The prefix/namespace, with trailing '\\'
+   * @param string $prefix
+   *   The prefix/namespace, with trailing '\\'.
    * @param array|string $paths
-   *   The PSR-4 base directories
+   *   The PSR-4 base directories.
    *
    * @throws \InvalidArgumentException
    */
@@ -274,6 +266,7 @@ class ClassLoader {
    * Turns on searching the include path for class files.
    *
    * @param bool $useIncludePath
+   *   Use include path.
    */
   public function setUseIncludePath($useIncludePath) {
 
@@ -281,10 +274,10 @@ class ClassLoader {
   }
 
   /**
-   * Can be used to check if the autoloader uses the include path to check
-   * for classes.
+   * Can be used to check if the autoloader uses the include path to check for classes.
    *
    * @return bool
+   *   Return bool.
    */
   public function getUseIncludePath() {
 
@@ -292,10 +285,10 @@ class ClassLoader {
   }
 
   /**
-   * Turns off searching the prefix and fallback directories for classes
-   * that have not been registered with the class map.
+   * Turns off searching the prefix and fallback directories for classes that have not been registered with the class map.
    *
    * @param bool $classMapAuthoritative
+   *   The class.
    */
   public function setClassMapAuthoritative($classMapAuthoritative) {
 
@@ -306,6 +299,7 @@ class ClassLoader {
    * Should class lookup fail if not found in the current class map?
    *
    * @return bool
+   *   Return bool.
    */
   public function isClassMapAuthoritative() {
 
@@ -316,7 +310,7 @@ class ClassLoader {
    * Registers this instance as an autoloader.
    *
    * @param bool $prepend
-   *   Whether to prepend the autoloader or not
+   *   Whether to prepend the autoloader or not.
    */
   public function register($prepend = FALSE) {
 
@@ -334,16 +328,16 @@ class ClassLoader {
   /**
    * Loads the given class or interface.
    *
-   * @param string $classThe
-   *   name of the class
-   *   The name of the class
+   * @param string $class
+   *   The name of the class.
    *
-   * @return bool|null True if loaded, null otherwise
+   * @return bool|null
+   *   True if loaded, null otherwise.
    */
   public function loadClass($class) {
 
     if ($file = $this->findFile($class)) {
-      includeFile($file);
+      include_file($file);
 
       return TRUE;
     }
@@ -353,9 +347,10 @@ class ClassLoader {
    * Finds the path to the file where the class is defined.
    *
    * @param string $class
-   *   The name of the class
+   *   The name of the class.
    *
-   * @return string|false The path if found, false otherwise
+   * @return string|false
+   *   The path if found, false otherwise.
    */
   public function findFile($class) {
 
@@ -388,7 +383,15 @@ class ClassLoader {
   }
 
   /**
+   * FindFileWithExtension.
    *
+   * @param string $class
+   *   The class.
+   * @param string $ext
+   *   The extension.
+   *
+   * @return bool|string
+   *   Return bool.
    */
   private function findFileWithExtension($class, $ext) {
 
@@ -457,8 +460,11 @@ class ClassLoader {
  * Scope isolated include.
  *
  * Prevents access to $this/self from included files.
+ *
+ * @param string $file
+ *   The file.
  */
-function includeFile($file) {
+function include_file($file) {
 
   include $file;
 }
