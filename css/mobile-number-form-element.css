@@ -117,7 +117,6 @@ div.mobile-number-field div.form-item {
 }
 
 .mobile-number-field .verified span {
-  width: 18px;
   display: inline;
   color: transparent;
   overflow: hidden;
