@@ -23,8 +23,8 @@ interface MobileNumberUtilInterface {
   const VERIFY_ATTEMPTS_COUNT = 5;
   const SMS_ATTEMPTS_INTERVAL = 60;
   const SMS_ATTEMPTS_COUNT = 1;
-  
-  
+
+
   /**
    * Specifies the mobile number was verified.
    */

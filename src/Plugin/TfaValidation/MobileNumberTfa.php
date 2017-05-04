@@ -121,9 +121,10 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationInterface, T
   public function submitForm(array $form, FormStateInterface &$form_state) {
     // Resend code if pushed.
     if ($form_state['values']['op'] === $form_state['values']['resend']) {
-      if(!$this->mobileNumberUtil->checkFlood($this->mobileNumber,'sms')) {
+      if (!$this->mobileNumberUtil->checkFlood($this->mobileNumber, 'sms')) {
         drupal_set_message(t('Too many verification code requests, please try again shortly.'), 'error');
-      } elseif (!$this->sendCode()) {
+      }
+      elseif (!$this->sendCode()) {
         drupal_set_message(t('Unable to deliver the code. Please contact support.'), 'error');
       }
       else {

@@ -513,12 +513,14 @@ class MobileNumberItem extends FieldItemBase {
 
     if ($unique_type == MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_YES_VERIFIED) {
       $query->condition("$field_name.verified", "1");
-      if($this->isVerified()) {
+      if ($this->isVerified()) {
         $result = !(bool) $query->execute();
-      } else {
+      }
+      else {
         $result = TRUE;
       }
-    } else {
+    }
+    else {
       $result = !(bool) $query->execute();
     }
 

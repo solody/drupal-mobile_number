@@ -112,7 +112,7 @@ class MobileNumber extends FormElement {
       '#default_value' => array(),
       '#mobile_number' => array(),
     );
-    
+
     $element['#mobile_number'] += array(
       'allowed_countries' => array(),
       'verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
@@ -120,7 +120,7 @@ class MobileNumber extends FormElement {
       'tfa' => FALSE,
       'token_data' => array(),
       'placeholder' => NULL,
-      );
+    );
     $settings = $element['#mobile_number'];
 
     $element['#default_value'] += array(
@@ -263,7 +263,7 @@ class MobileNumber extends FormElement {
   public function mobileNumberValidate($element, FormStateInterface $form_state, &$complete_form) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-  
+
     $settings = $element['#mobile_number'];
     $op = $this->getOp($element, $form_state);
     $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
@@ -469,9 +469,10 @@ class MobileNumber extends FormElement {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
-    if($input_value) {
+    if ($input_value) {
       $values = !empty($element['#value']['local_number']) ? $element['#value'] : array();
-    } else {
+    }
+    else {
       $values = !empty($element['#default_value']['local_number']) ? $element['#default_value'] : array();
     }
     if ($values) {
@@ -481,6 +482,15 @@ class MobileNumber extends FormElement {
     return NULL;
   }
 
+  /**
+   * Gets verified status based on default value and verified numbers in session.
+   *
+   * @param array $element
+   *   Form element.
+   *
+   * @return bool
+   *   True if verified, false otherwise.
+   */
   public static function isVerified($element) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');

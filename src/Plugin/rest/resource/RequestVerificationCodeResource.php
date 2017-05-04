@@ -108,11 +108,11 @@ class RequestVerificationCodeResource extends ResourceBase {
     $number = "+$number";
 
     $mobile_number = $this->util->testMobileNumber($number);
-  
+
     if (!$this->util->checkFlood($mobile_number)) {
       throw new AccessDeniedHttpException('Too many verification attempts, please try again in a few hours.');
     }
-  
+
     if (!$this->util->checkFlood($mobile_number, 'sms')) {
       throw new AccessDeniedHttpException('Too many verification code requests, please try again shortly..');
     }

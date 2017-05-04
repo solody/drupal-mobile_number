@@ -226,11 +226,13 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     switch ($type) {
       case 'verification':
         return $this->flood->isAllowed('mobile_number_verification', $this::VERIFY_ATTEMPTS_COUNT, $this::VERIFY_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number));
-        break;
+
+      break;
       case 'sms':
         return $this->flood->isAllowed('mobile_number_sms', $this::SMS_ATTEMPTS_COUNT, $this::SMS_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number)) &&
-          $this->flood->isAllowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT*5, $this::SMS_ATTEMPTS_INTERVAL*5);
-        break;
+          $this->flood->isAllowed('mobile_number_sms_ip', $this::SMS_ATTEMPTS_COUNT * 5, $this::SMS_ATTEMPTS_INTERVAL * 5);
+
+      break;
       default:
         return TRUE;
     }
@@ -257,7 +259,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
       ->get('name'), $message);
 
     $message = $this->token->replace($message, $token_data);
-    
+
     $this->flood->register('mobile_number_sms', $this::SMS_ATTEMPTS_INTERVAL, $this->getCallableNumber($mobile_number));
     $this->flood->register('mobile_number_sms_ip', $this::SMS_ATTEMPTS_INTERVAL * 5);
 
