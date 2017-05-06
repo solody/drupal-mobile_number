@@ -12,7 +12,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberElementTest extends WebTestBase {
 
-  static $modules = array('mobile_number', 'sms');
+  public static $modules = array('mobile_number', 'sms');
 
   /**
    * Mobile number util.
@@ -57,6 +57,7 @@ class MobileNumberElementTest extends WebTestBase {
     $allowed_countries = array(
       'IL' => array('IL' => 'IL'),
       'US' => array('US' => 'US'),
+      'Mix' => array('US' => 'US', 'IL' => 'IL'),
       'All' => array(),
     );
 
@@ -73,24 +74,18 @@ class MobileNumberElementTest extends WebTestBase {
     );
 
     foreach ($allowed_countries as $type => $allowed) {
-      $element['#mobile_number']['allowed_countries'] = $allowed;
-      $errors = $this->submitFormElement($element, $input);
-      $success = $type == 'US' ? 'failure' : 'success';
-      $this->assertTrue($errors == ($type == 'US'), "IL mobile number with $type allowed: $success.", 'Number Validity');
-    }
+      foreach ($local_numbers as $ln => $local_number) {
+        foreach ($countries as $c => $country) {
+          $element['#mobile_number']['allowed_countries'] = $allowed;
+          $input['country-code'] = $c;
+          $input['mobile'] = $ln;
 
-    unset($element['#mobile_number']['allowed_countries']);
+          $errors = $this->submitFormElement($element, $input);
+          $valid = '0541234567' == $ln && ($type == 'IL' || $type == 'All' || $type == 'Mix') && $c == 'IL';
 
-    foreach ($local_numbers as $ln => $local_number) {
-      foreach ($countries as $c => $country) {
-        $input['country-code'] = $c;
-        $input['mobile'] = $ln;
-
-        $errors = $this->submitFormElement($element, $input);
-        $valid = '0541234567' == $ln && 'IL' == $c;
-
-        $success = $valid ? 'Success' : 'Failure';
-        $this->assertTrue($valid == !$errors, "$country country, $local_number local number: $success.", 'Number Validity');
+          $success = $valid ? 'Success' : 'Failure';
+          $this->assertTrue($valid == !$errors, "$country country, $local_number local number, allowed $type: $success.", 'Number Validity');
+        }
       }
     }
   }
@@ -115,7 +110,9 @@ class MobileNumberElementTest extends WebTestBase {
       'mobile_number' => $input,
       'form_id' => $form_id,
     ]);
-    $form_state->setFormObject(new PrepareCallbackTestForm());
+    $form_object = new PrepareCallbackTestForm();
+    $form_state->setFormObject($form_object);
+    $form_state->setCached(FALSE);
     $form_state->setMethod('post');
 
     // The form token CSRF protection should not interfere with this test,

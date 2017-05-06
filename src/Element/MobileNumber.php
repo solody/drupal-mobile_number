@@ -15,16 +15,18 @@ use Drupal\Core\Ajax\SettingsCommand;
  * Provides a form input element for entering an email address.
  *
  * Properties:
- * - #default_value
- * - #allowed_countries
- * - #verify
- * - #tfa
- * - #message.
+ * - #mobile_number
+ *   - allowed_countries
+ *   - verify
+ *   - tfa
+ *   - message
+ *   - placeholder
+ *   - token_data.
  *
  * Example usage:
  * @code
  * $form['mobile_number'] = array(
- *   '#type' => 'mpbile_number',
+ *   '#type' => 'mobile_number',
  *   '#title' => $this->t('Mobile Number'),
  * );
  *
@@ -46,12 +48,7 @@ class MobileNumber extends FormElement {
       '#element_validate' => array(
         array($this, 'mobileNumberValidate'),
       ),
-      '#allowed_countries' => array(),
-      '#verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
-      '#message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
-      '#tfa' => NULL,
-      '#token_data' => array(),
-      '#tree' => TRUE,
+      '#mobile_number' => array(),
     );
   }
 
@@ -73,7 +70,9 @@ class MobileNumber extends FormElement {
     $util = \Drupal::service('mobile_number.util');
     $result = array();
     if ($input) {
-      $country = !empty($input['country-code']) ? $input['country-code'] : (count($element['#allowed_countries']) == 1 ? key($element['#allowed_countries']) : NULL);
+      $settings = !empty($element['#mobile_number']) ? $element['#mobile_number'] : array();
+      $settings += array('allowed_countries' => array());
+      $country = !empty($input['country-code']) ? $input['country-code'] : (count($settings['allowed_countries']) == 1 ? key($settings['allowed_countries']) : NULL);
       $mobile_number = $util->getMobileNumber($input['mobile'], $country);
       $result = array(
         'value' => $mobile_number ? $util->getCallableNumber($mobile_number) : '',

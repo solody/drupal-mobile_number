@@ -389,7 +389,7 @@ class MobileNumberItem extends FieldItemBase {
     $util = \Drupal::service('mobile_number.util');
     $values = $this->getValue();
     $number = '';
-    $country = '';
+    $country = NULL;
     if (!empty($values['country'])) {
       if (!empty($values['local_number'])) {
         $number = $values['local_number'];
