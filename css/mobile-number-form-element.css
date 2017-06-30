@@ -50,6 +50,7 @@ div.mobile-number-field div.form-item {
   line-height: 30px;
   box-sizing: border-box;
   min-width: 43px;
+  font-family: Arial, sans-serif;
 }
 
 .mobile-number-field .country-select select {

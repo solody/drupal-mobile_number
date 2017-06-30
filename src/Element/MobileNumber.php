@@ -112,6 +112,8 @@ class MobileNumber extends FormElement {
       '#mobile_number' => array(),
     );
 
+    $element['#tree'] = TRUE;
+
     $element['#mobile_number'] += array(
       'allowed_countries' => array(),
       'verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,

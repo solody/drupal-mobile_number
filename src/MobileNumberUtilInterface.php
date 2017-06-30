@@ -60,11 +60,17 @@ interface MobileNumberUtilInterface {
    *   Number.
    * @param null|string $country
    *   Country.
+   * @param array $types
+   *   Mobile number types to verify as defined in
+   *   \libphonenumber\PhoneNumberType.
    *
    * @return PhoneNumber|NULL
    *   Phone Number object if successful.
    */
-  public function getMobileNumber($number, $country = NULL);
+  public function getMobileNumber($number, $country = NULL, $types = array(
+    1 => 1,
+    2 => 2,
+  ));
 
   /**
    * Test mobile number validity.
@@ -73,6 +79,9 @@ interface MobileNumberUtilInterface {
    *   Number.
    * @param null|string $country
    *   Country.
+   * @param array $types
+   *   Mobile number types to verify as defined in
+   *   \libphonenumber\PhoneNumberType.
    *
    * @throws \Drupal\mobile_number\Exception\MobileNumberException
    *   Thrown if mobile number is not valid.
@@ -80,7 +89,10 @@ interface MobileNumberUtilInterface {
    * @return PhoneNumber
    *   Libphonenumber Phone number object.
    */
-  public function testMobileNumber($number, $country = NULL);
+  public function testMobileNumber($number, $country = NULL, $types = array(
+    1 => 1,
+    2 => 2,
+  ));
 
   /**
    * Get international number.
