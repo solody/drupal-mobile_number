@@ -100,19 +100,25 @@ class MobileNumber extends FormElement {
    * @return array
    *   Processed element.
    */
-  public function mobileNumberProcess($element) {
+  public function mobileNumberProcess($element, FormStateInterface $form_state, array $complete_form) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    // $element['#tree'] = TRUE;.
+    $element['#tree'] = TRUE;
     $field_name = $element['#name'];
     $field_path = implode('][', $element['#parents']);
     $id = $element['#id'];
+    $op = $this->getOp($element, $form_state);
     $element += array(
       '#default_value' => array(),
       '#mobile_number' => array(),
     );
 
-    $element['#tree'] = TRUE;
+    $errors = $form_state->getErrors();
+    foreach ($errors as $path => $message) {
+      if (!(strpos($path, $field_path) === 0)) {
+        unset($errors[$path]);
+      }
+    }
 
     $element['#mobile_number'] += array(
       'allowed_countries' => array(),
@@ -206,15 +212,24 @@ class MobileNumber extends FormElement {
         '#submit' => array(),
       );
 
+      $user_input = $form_state->getUserInput();
+      $vc_parents = $element['#parents'];
+      array_push($vc_parents, 'verification_code');
+      if (NestedArray::getValue($user_input, $vc_parents)) {
+        NestedArray::setValue($user_input, $vc_parents, '');
+        $form_state->setUserInput($user_input);
+      }
+
+      $verify_prompt = (!$verified && $op && (!$errors || $op == 'mobile_number_verify'));
       $element['verification_code'] = array(
         '#type' => 'textfield',
         '#title' => t('Verification Code'),
-        '#prefix' => '<div class="verification"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>',
+        '#prefix' => '<div class="verification ' . ($verify_prompt ? 'show' : '') . '"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>',
       );
 
       $element['verify'] = array(
         '#type' => 'button',
-        '#value' => t('Verfiy'),
+        '#value' => t('Verify'),
         '#ajax' => array(
           'callback' => 'Drupal\mobile_number\Element\MobileNumber::verifyAjax',
           'wrapper' => $id,
@@ -238,6 +253,15 @@ class MobileNumber extends FormElement {
           '#default_value' => !empty($value['tfa']) ? 1 : 0,
           '#prefix' => '<div class="mobile-number-tfa">',
           '#suffix' => '</div>',
+        );
+      }
+
+      $storage = $form_state->getStorage();
+      if (!empty($storage['mobile_number_fields'][$field_path]['token'])) {
+        $element['verification_token'] = array(
+          '#type' => 'hidden',
+          '#value' => $storage['mobile_number_fields'][$field_path]['token'],
+          '#name' => $field_name . '[verification_token]',
         );
       }
     }
@@ -264,19 +288,37 @@ class MobileNumber extends FormElement {
   public function mobileNumberValidate($element, FormStateInterface $form_state, &$complete_form) {
     /** @var MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-
     $settings = $element['#mobile_number'];
     $op = $this->getOp($element, $form_state);
     $field_label = !empty($element['#field_title']) ? $element['#field_title'] : $element['#title'];
     $tree_parents = $element['#parents'];
+    $field_path = implode('][', $tree_parents);
     $input = NestedArray::getValue($form_state->getUserInput(), $tree_parents);
     $input = $input ? $input : array();
     $mobile_number = NULL;
     $countries = $util->getCountryOptions(array(), TRUE);
+    $token = !empty($element['#value']['verification_token']) ? $element['#value']['verification_token'] : FALSE;
+
     if ($input) {
       $input += count($settings['allowed_countries']) == 1 ? array('country-code' => key($settings['allowed_countries'])) : array();
       try {
         $mobile_number = $util->testMobileNumber($input['mobile'], $input['country-code']);
+        $verified = static::isVerified($element);
+
+        if ($op == 'mobile_number_send_verification' && !$util->checkFlood($mobile_number, 'sms')) {
+          $form_state->setError($element['mobile'], t('Too many verification code requests for %field, please try again shortly.', array(
+            '%field' => $field_label,
+          )));
+        }
+        elseif ($op == 'mobile_number_send_verification' && !$verified && !($token = $util->sendVerification($mobile_number, $settings['message'], $util->generateVerificationCode(), $settings['token_data']))) {
+          $form_state->setError($element['mobile'], t('An error occurred while sending sms.'));
+        }
+        elseif ($op == 'mobile_number_verify' && !$verified && $util->checkFlood($mobile_number)) {
+          $verification_parents = $element['#array_parents'];
+          $verification_element = NestedArray::getValue($complete_form, $verification_parents);
+          $verification_element['verification_code']['#prefix'] = '<div class="verification show"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>';
+          NestedArray::setValue($complete_form, $verification_parents, $verification_element);
+        }
       }
       catch (MobileNumberException $e) {
         switch ($e->getCode()) {
@@ -321,6 +363,12 @@ class MobileNumber extends FormElement {
       }
     }
 
+    if (!empty($token)) {
+      $storage = $form_state->getStorage();
+      $storage['mobile_number_fields'][$field_path]['token'] = $token;;
+      $form_state->setStorage($storage);
+    }
+
     return $element;
   }
 
@@ -356,40 +404,20 @@ class MobileNumber extends FormElement {
     }
 
     $mobile_number = static::getMobileNumber($element);
-    $default_mobile_number = static::getMobileNumber($element, FALSE);
     $verified = FALSE;
     $verify_prompt = FALSE;
-    $flood_ok = TRUE;
-    $is_admin = \Drupal::currentUser()
-      ->hasPermission('bypass mobile number verification requirement');
-    $token = !empty($element['#value']['verification_token']) ? $element['#value']['verification_token'] : FALSE;
     if ($mobile_number) {
       $verified = static::isVerified($element);
       $verify_flood_ok = $verified || ($util->checkFlood($mobile_number));
 
       if ($verify_flood_ok) {
-        if (!$verified && !$errors && $op == 'mobile_number_send_verification' && $util->checkFlood($mobile_number, 'sms')) {
-          $token = $util->sendVerification($mobile_number, $settings['message'], $util->generateVerificationCode(), $settings['token_data']);
-          if (!$token) {
-            drupal_set_message(t('An error occurred while sending sms.'), 'error');
-            $verify_prompt = FALSE;
-          }
-          else {
-            $verify_prompt = TRUE;
-          }
+        if (!$verified && !$errors && ($op == 'mobile_number_send_verification')) {
+          $verify_prompt = TRUE;
         }
-        elseif (!$verified && $op == 'mobile_number_verify') {
+        elseif (!$verified && ($op == 'mobile_number_verify')) {
           $verify_prompt = TRUE;
         }
       }
-    }
-
-    if (!empty($token)) {
-      $element['verification_token'] = array(
-        '#type' => 'hidden',
-        '#value' => $token,
-        '#name' => $element['#name'] . '[verification_token]',
-      );
     }
 
     $element['messages'] = array('#type' => 'status_messages');

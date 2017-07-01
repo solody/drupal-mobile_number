@@ -98,7 +98,7 @@ class MobileNumberWidget extends WidgetBase {
   }
 
   /**
-   * Form element validation handler; Invokes selection plugin's validation.
+   * Form element validation handler.
    *
    * @param array $element
    *   The form where the settings form is being included in.

@@ -84,7 +84,7 @@ class MobileNumber extends WebformElementBase {
 
     return $form;
   }
-  
+
   /**
    * {@inheritdoc}
    */
@@ -97,7 +97,7 @@ class MobileNumber extends WebformElementBase {
       $form_state->setErrorByName('mobile_number][default_country', t('Default country is not in one of the allowed countries.'));
     }
   }
-  
+
   /**
    * {@inheritdoc}
    */
