@@ -98,16 +98,16 @@ class MobileNumber implements MobileNumberInterface {
         throw new \Exception('Not a mobile number', $this::ERROR_WRONG_TYPE);
       }
     }
-
-    $national_number = $phone_number->getNationalNumber();
-    $this->localNumber = str_pad($national_number, $phone_number->getNumberOfLeadingZeros() + strlen($national_number), '0', STR_PAD_LEFT);
+    
     $this->country = $this->libUtil->getRegionCodeForNumber($phone_number);
+    
+    $national_number = $phone_number->getNationalNumber();
+    $prefix = $this->libUtil->getNddPrefixForRegion($this->country, TRUE);
+    $this->localNumber = $prefix . $national_number;
 
     if ($country && $this->country != $country) {
       throw new \Exception('Wrong country', $this::ERROR_WRONG_COUNTRY);
     }
-
-    $country_prefix = $this->libUtil->getCountryCodeForRegion($this->country);
 
     $this->callableNumber = $this->libUtil->format($phone_number, PhoneNumberFormat::E164);
     $this->libPhoneNumber = $phone_number;
