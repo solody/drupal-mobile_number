@@ -164,7 +164,16 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    */
   public function getLocalNumber(PhoneNumber $mobile_number) {
     $national_number = $mobile_number->getNationalNumber();
-    return $mobile_number ? str_pad($national_number, $mobile_number->getNumberOfLeadingZeros() + strlen($national_number), '0', STR_PAD_LEFT) : NULL;
+    
+    if(!$mobile_number) {
+      return NULL;
+    }
+    
+    if($mobile_number->hasNumberOfLeadingZeros()) {
+      return str_pad($national_number, $mobile_number->getNumberOfLeadingZeros() + strlen($national_number), '0', STR_PAD_LEFT);
+    }
+    
+    return $national_number;
   }
 
   /**
