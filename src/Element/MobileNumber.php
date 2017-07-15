@@ -186,7 +186,7 @@ class MobileNumber extends FormElement {
       '#suffix' => '<div class="form-item verified ' . ($verified ? 'show' : '') . '" title="' . t('Verified') . '"><span>' . t('Verified') . '</span></div>',
       '#attributes' => array(
         'class' => array('local-number'),
-        'placeholder' => isset($settings['placeholder']) ? t($settings['placeholder']) : t('Phone number'),
+        'placeholder' => isset($settings['placeholder']) ? ($settings['placeholder'] ? t($settings['placeholder']) : '') : t('Phone number'),
       ),
     );
 
