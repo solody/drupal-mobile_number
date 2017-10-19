@@ -257,13 +257,11 @@ class MobileNumber extends FormElement {
       }
 
       $storage = $form_state->getStorage();
-      if (!empty($storage['mobile_number_fields'][$field_path]['token'])) {
-        $element['verification_token'] = array(
-          '#type' => 'hidden',
-          '#value' => $storage['mobile_number_fields'][$field_path]['token'],
-          '#name' => $field_name . '[verification_token]',
-        );
-      }
+      $element['verification_token'] = array(
+        '#type' => 'hidden',
+        '#value' => !empty($storage['mobile_number_fields'][$field_path]['token']) ? $storage['mobile_number_fields'][$field_path]['token'] : '',
+        '#name' => $field_name . '[verification_token]',
+      );
     }
 
     if (!empty($element['#description'])) {
@@ -388,6 +386,11 @@ class MobileNumber extends FormElement {
     $util = \Drupal::service('mobile_number.util');
 
     $element = static::getTriggeringElementParent($complete_form, $form_state);
+    $tree_parents = $element['#parents'];
+    $field_path = implode('][', $tree_parents);
+    $storage = $form_state->getStorage();
+    $token = !empty($storage['mobile_number_fields'][$field_path]['token']) ? $storage['mobile_number_fields'][$field_path]['token'] : NULL;
+    $element['verification_token']['#value'] = $token;
     $settings = $element['#mobile_number'];
     $op = static::getOp($element, $form_state);
 
@@ -419,18 +422,26 @@ class MobileNumber extends FormElement {
         }
       }
     }
-
+    
     $element['messages'] = array('#type' => 'status_messages');
     unset($element['_weight']);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(NULL, $element));
+    
+    $settings = [];
 
     if ($verify_prompt) {
-      $response->addCommand(new SettingsCommand(array('mobileNumberVerificationPrompt' => $element['#id'])));
+      $settings['mobileNumberVerificationPrompt'] = $element['#id'];
+    } else {
+      $settings['mobileNumberHideVerificationPrompt'] = $element['#id'];
     }
 
     if ($verified) {
-      $response->addCommand(new SettingsCommand(array('mobileNumberVerified' => $element['#id'])));
+      $settings['mobileNumberVerified'] = $element['#id'];
+    }
+    
+    if($settings) {
+      $response->addCommand(new SettingsCommand($settings));
     }
 
     return $response;

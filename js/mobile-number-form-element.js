@@ -57,6 +57,10 @@
         $('#' + settings['mobileNumberVerificationPrompt'] + ' .verification').addClass('show');
         $('#' + settings['mobileNumberVerificationPrompt'] + ' .verification input[type="text"]').val('');
       }
+      
+      if (settings['mobileNumberHideVerificationPrompt']) {
+        $('#' + settings['mobileNumberHideVerificationPrompt'] + ' .verification').removeClass('show');
+      }
 
       if (settings['mobileNumberVerified']) {
         $('#' + settings['mobileNumberVerified'] + ' .send-button').removeClass('show');
