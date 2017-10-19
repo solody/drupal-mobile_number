@@ -840,13 +840,11 @@ function mobile_number_element_process($element, &$form_state) {
       '#prefix' => '<div class="verification"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>',
     );
 
-    if (!empty($form_state['storage']['mobile_number_fields'][$field_path]['token'])) {
-      $element['verification_token'] = array(
-        '#type' => 'hidden',
-        '#value' => $form_state['storage']['mobile_number_fields'][$field_path]['token'],
-        '#name' => $field_name . '[verification_token]',
-      );
-    }
+    $element['verification_token'] = array(
+      '#type' => 'hidden',
+      '#value' => !empty($form_state['storage']['mobile_number_fields'][$field_path]['token']) ? $form_state['storage']['mobile_number_fields'][$field_path]['token'] : '',
+      '#name' => $field_name . '[verification_token]',
+    );
 
     $element['verify'] = array(
       '#type' => 'button',
