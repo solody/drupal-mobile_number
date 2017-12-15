@@ -19,16 +19,16 @@ function _mobile_number_request_code($number, $country = NULL) {
   try {
     $mobile_number = new MobileNumber($number, $country);
     if (!$mobile_number->checkFlood()) {
-      return services_error(t('Too many attempts, try again later.'), MobileNumber::VERIFY_TOO_MANY_ATTEMPTS);
+      return services_error(t('Too many attempts, try again later.'), 406);
     }
     if ($token = $mobile_number->sendVerification(MOBILE_NUMBER_DEFAULT_SMS_MESSAGE, $mobile_number->generateVerificationCode())) {
       return array('verification_token' => $token);
     }
 
-    return services_error(t('Could not send verification code.'), MobileNumber::VERIFY_SMS_FAILED);
+    return services_error(t('Could not send verification code.'), 406);
   }
   catch (Exception $e) {
-    return services_error(t($e->getMessage()), $e->getCode());
+    return services_error(t($e->getMessage()), 406);
   }
 
 }
