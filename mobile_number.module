@@ -1198,6 +1198,46 @@ function mobile_number_services_resources() {
             ),
           ),
         ),
+        'verify_number' => array(
+          'help' => 'Verifies a mobile number.',
+          'file' => array(
+            'type' => 'inc',
+            'module' => 'mobile_number',
+            'name' => 'include/mobile_number.resources',
+          ),
+          'callback' => 'mobile_number_resource_verify_number',
+          'access arguments' => array('access mobile number services api'),
+          'args' => array(
+            array(
+              'name' => 'number',
+              'type' => 'string',
+              'description' => 'The mobile number to verify.',
+              'source' => array('data' => 'number'),
+              'optional' => FALSE,
+            ),
+            array(
+              'name' => 'country',
+              'type' => 'string',
+              'description' => 'The country of the mobile number.',
+              'source' => array('data' => 'country'),
+              'optional' => TRUE,
+            ),
+            array(
+              'name' => 'code',
+              'type' => 'string',
+              'description' => 'The that was sent to the mobile number.',
+              'source' => array('data' => 'code'),
+              'optional' => FALSE,
+            ),
+            array(
+              'name' => 'verification_token',
+              'type' => 'string',
+              'description' => 'The token generated to go with the code.',
+              'source' => array('data' => 'verification_token'),
+              'optional' => TRUE,
+            ),
+          ),
+        ),
       ),
     ),
   );
