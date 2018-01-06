@@ -716,6 +716,10 @@ function mobile_number_value_callback($element, $input = FALSE) {
       );
     }
     catch (Exception $e) {
+      if (strlen($input['mobile'])) {
+        // A value was submitted, so the resultant array should not be empty.
+        $result['value'] = '';
+      }
     }
   }
   else {
