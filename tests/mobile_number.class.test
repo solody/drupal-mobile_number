@@ -41,7 +41,7 @@ class MobileNumberClassTestCase extends DrupalWebTestCase {
   public function testNumberValidity() {
 
     $local_numbers = array(
-      '+972547322602' => 'International IL',
+      '+972541234568' => 'International IL',
       '091234567' => 'None mobile IL',
       '0541234567' => 'Valid IL',
       '111' => 'Invalid IL',
@@ -67,11 +67,11 @@ class MobileNumberClassTestCase extends DrupalWebTestCase {
         $supposed_valid = FALSE;
         switch ($country) {
           case 'IL':
-            $supposed_valid = $number == '+972547322602' || $number == '0541234567';
+            $supposed_valid = $number == '+972541234568' || $number == '0541234567';
             break;
 
           case NULL:
-            $supposed_valid = $number == '+972547322602';
+            $supposed_valid = $number == '+972541234568';
             break;
         }
 

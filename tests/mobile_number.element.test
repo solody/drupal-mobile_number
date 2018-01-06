@@ -114,13 +114,44 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
       NULL => 'No code',
       $code => 'Correct code',
     );
+  
+    $required_states = array(
+      TRUE => 'Required',
+      FALSE => 'Not required',
+    );
+    
+    $required_inputs = array(
+      TRUE => array(
+        'country-code' => $country,
+        'mobile' => $number,
+      ),
+      FALSE => array(
+        'country-code' => $country,
+        'mobile' => '',
+      ),
+    );
 
     $element = array(
       '#type' => 'mobile_number',
       '#title' => 'M',
-      '#mobile_number' => array('verify' => MOBILE_NUMBER_VERIFY_REQUIRED),
+      '#mobile_number' => array('verify' => MOBILE_NUMBER_VERIFY_OPTIONAL),
     );
-
+    
+    
+    foreach($required_states AS $required => $required_msg) {
+      $element['#required'] = $required;
+      foreach($required_inputs AS $has_value => $input) {
+        $errors = $this->submitFormElement($element, $input, $value);
+        $this->assertTrue(
+          !!$errors == ($required && !$has_value),
+          "Input is required: " . ($required ? 'TRUE' : 'FALSE') .
+          ', Input has value: ' . ($has_value ? 'TRUE' : 'FALSE') .
+          ', has error: ' . (($required && !$has_value) ? 'TRUE' : 'FALSE'),
+          'Number Verification');
+      }
+    }
+  
+    $element['#mobile_number']['verify'] = MOBILE_NUMBER_VERIFY_REQUIRED;
     $input['country-code'] = $country;
     $input['mobile'] = $number;
     $errors = $this->submitFormElement($element, $input, $value);
