@@ -54,7 +54,8 @@ function mobile_number_resource_verify_number($number, $country = NULL, $code, $
     $mobile_number = new MobileNumber($number, $country);
     if (!$mobile_number->checkFlood()) {
       return services_error(t('Too many attempts, try again later.'), 406);
-    } else {
+    }
+    else {
       return $mobile_number->verifyCode($code, $verification_token);
     }
   }
