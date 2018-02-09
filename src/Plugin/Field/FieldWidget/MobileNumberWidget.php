@@ -157,12 +157,17 @@ class MobileNumberWidget extends WidgetBase {
 
     $tfa_field = $util->getTfaField();
 
+    $default_country = empty($settings['countries']) ?
+      $settings['default_country'] :
+      (empty($settings['countries'][$settings['default_country']]) ?
+        key($settings['countries']) : $settings['default_country']);
+    
     $element += array(
       '#type' => 'mobile_number',
       '#description' => $element['#description'],
       '#default_value' => array(
         'value' => $item->value,
-        'country' => !empty($item->country) ? $item->country : $settings['default_country'],
+        'country' => !empty($item->country) ? $item->country : $default_country,
         'local_number' => $item->local_number,
         'verified' => $item->verified,
         'tfa' => $item->tfa,
