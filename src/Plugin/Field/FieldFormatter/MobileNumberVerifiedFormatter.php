@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Drupal\mobile_number\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FormatterBase;
@@ -25,14 +24,14 @@ class MobileNumberVerifiedFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    $element = array();
+    $element = [];
 
     foreach ($items as $delta => $item) {
       /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
-      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, array())) {
-        $element[$delta] = array(
+      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, [])) {
+        $element[$delta] = [
           '#markup' => '<span class="verified-status' . (!empty($item->verified) ? ' verified' : '') . '">' . (!empty($item->verified) ? (string) t('Verified') : (string) t('Not verified')) . '</span>',
-        );
+        ];
       }
     }
 

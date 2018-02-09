@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Drupal\mobile_number\Plugin\Field\FieldFormatter;
 
 /**

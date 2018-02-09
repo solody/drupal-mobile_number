@@ -2,7 +2,7 @@
 
 namespace Drupal\mobile_number;
 
-use \libphonenumber\PhoneNumber;
+use libphonenumber\PhoneNumber;
 
 /**
  * Provides an interface for mobile number utility.
@@ -64,13 +64,13 @@ interface MobileNumberUtilInterface {
    *   Mobile number types to verify as defined in
    *   \libphonenumber\PhoneNumberType.
    *
-   * @return PhoneNumber|NULL
+   * @return \libphonenumber\PhoneNumber|null
    *   Phone Number object if successful.
    */
-  public function getMobileNumber($number, $country = NULL, $types = array(
+  public function getMobileNumber($number, $country = NULL, $types = [
     1 => 1,
     2 => 2,
-  ));
+  ]);
 
   /**
    * Test mobile number validity.
@@ -86,18 +86,18 @@ interface MobileNumberUtilInterface {
    * @throws \Drupal\mobile_number\Exception\MobileNumberException
    *   Thrown if mobile number is not valid.
    *
-   * @return PhoneNumber
+   * @return \libphonenumber\PhoneNumber
    *   Libphonenumber Phone number object.
    */
-  public function testMobileNumber($number, $country = NULL, $types = array(
+  public function testMobileNumber($number, $country = NULL, $types = [
     1 => 1,
     2 => 2,
-  ));
+  ]);
 
   /**
    * Get international number.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    *
    * @return string
@@ -108,7 +108,7 @@ interface MobileNumberUtilInterface {
   /**
    * Get country code.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    *
    * @return string
@@ -130,7 +130,7 @@ interface MobileNumberUtilInterface {
   /**
    * Get national number.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    *
    * @return string
@@ -152,7 +152,7 @@ interface MobileNumberUtilInterface {
   /**
    * Checks whether there were too many verifications attempted with the current number.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    * @param string $type
    *   Flood type, 'sms' or 'verification'.
@@ -165,10 +165,10 @@ interface MobileNumberUtilInterface {
   /**
    * Gets token generated if verification code was sent.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    *
-   * @return string|NULL
+   * @return string|null
    *   A drupal token (43 characters).
    */
   public function getToken(PhoneNumber $mobile_number);
@@ -195,16 +195,16 @@ interface MobileNumberUtilInterface {
    * @return array
    *   Array of options, with country code as keys. (Eg. ['IL' => 'IL (+972)'])
    */
-  public function getCountryOptions($filter = array(), $show_country_names = FALSE);
+  public function getCountryOptions($filter = [], $show_country_names = FALSE);
 
   /**
    * Verifies input code matches code sent to user.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    * @param string $code
    *   Input code.
-   * @param string|NULL $token
+   * @param string|null $token
    *   Verification token, if verification code was not sent in this session.
    *
    * @return bool
@@ -215,7 +215,7 @@ interface MobileNumberUtilInterface {
   /**
    * Send verification code to mobile number.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    * @param string $message
    *   Drupal translatable string.
@@ -227,15 +227,15 @@ interface MobileNumberUtilInterface {
    * @return bool
    *   Success flag.
    */
-  public function sendVerification(PhoneNumber $mobile_number, $message, $code, $token_data = array());
+  public function sendVerification(PhoneNumber $mobile_number, $message, $code, $token_data = []);
 
   /**
    * Is the number already verified.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    *
-   * @return bool`
+   * @return bool
    *   TRUE if verified.
    */
   public function isVerified(PhoneNumber $mobile_number);
@@ -256,7 +256,7 @@ interface MobileNumberUtilInterface {
   /**
    * Generate hash given token and code.
    *
-   * @param PhoneNumber $mobile_number
+   * @param \libphonenumber\PhoneNumber $mobile_number
    *   Phone number object.
    * @param string $token
    *   Token.

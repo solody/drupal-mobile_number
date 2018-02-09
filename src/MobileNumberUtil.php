@@ -4,8 +4,8 @@ namespace Drupal\mobile_number;
 
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
-use \libphonenumber\PhoneNumber;
-use \libphonenumber\PhoneNumberFormat;
+use libphonenumber\PhoneNumber;
+use libphonenumber\PhoneNumberFormat;
 use Drupal\mobile_number\Exception\MobileNumberException;
 use Drupal\Core\Flood\FloodInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -23,49 +23,49 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * The PhoneNumberUtil object.
    *
-   * @var PhoneNumberUtil
+   * @var \libphonenumber\PhoneNumberUtil
    */
   public $libUtil;
 
   /**
    * The module handler service.
    *
-   * @var ModuleHandlerInterface
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   public $moduleHandler;
 
   /**
    * The config factory service.
    *
-   * @var ConfigFactoryInterface
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   public $configFactory;
 
   /**
    * The flood service.
    *
-   * @var FloodInterface
+   * @var \Drupal\Core\Flood\FloodInterface
    */
   public $flood;
 
   /**
    * The field manager service.
    *
-   * @var EntityFieldManagerInterface
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   public $fieldMananger;
 
   /**
    * The country manager service.
    *
-   * @var CountryManagerInterface
+   * @var \Drupal\Core\Locale\CountryManagerInterface
    */
   public $countryManager;
 
   /**
    * The token service.
    *
-   * @var Token
+   * @var \Drupal\Core\Utility\Token
    */
   public $token;
 
@@ -105,10 +105,10 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMobileNumber($number, $country = NULL, $types = array(
+  public function getMobileNumber($number, $country = NULL, $types = [
     1 => 1,
     2 => 2,
-  )) {
+  ]) {
     try {
       return $this->testMobileNumber($number, $country, $types);
     }
@@ -120,17 +120,17 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function testMobileNumber($number, $country = NULL, $types = array(
+  public function testMobileNumber($number, $country = NULL, $types = [
     1 => 1,
     2 => 2,
-  )) {
+  ]) {
 
     if (!$number) {
       throw new MobileNumberException('Empty number', MobileNumberException::ERROR_NO_NUMBER);
     }
 
     try {
-      /** @var PhoneNumber $phone_number */
+      /** @var \libphonenumber\PhoneNumber $phone_number */
       $phone_number = $this->libUtil->parse($number, $country);
     }
     catch (NumberParseException $e) {
@@ -163,14 +163,14 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    * {@inheritdoc}
    */
   public function getLocalNumber(PhoneNumber $mobile_number) {
-    if(!$mobile_number) {
+    if (!$mobile_number) {
       return NULL;
     }
-    
+
     $region_code = $this->libUtil->getRegionCodeForNumber($mobile_number);
     $prefix = $this->libUtil->getNddPrefixForRegion($region_code, TRUE);
     $national_number = $mobile_number->getNationalNumber();
-    
+
     return $prefix . $national_number;
   }
 
@@ -192,11 +192,11 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCountryOptions($filter = array(), $show_country_names = FALSE) {
+  public function getCountryOptions($filter = [], $show_country_names = FALSE) {
 
     $libUtil = $this->libUtil;
     $regions = $libUtil->getSupportedRegions();
-    $countries = array();
+    $countries = [];
 
     foreach ($regions as $region => $country) {
       $code = $libUtil->getCountryCodeForRegion($country);
@@ -257,7 +257,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
   /**
    * {@inheritdoc}
    */
-  public function sendVerification(PhoneNumber $mobile_number, $message, $code, $token_data = array()) {
+  public function sendVerification(PhoneNumber $mobile_number, $message, $code, $token_data = []) {
     $message = t($message);
     $message = str_replace('!code', $code, $message);
     $message = str_replace('!site_name', $this->configFactory->get('system.site')
@@ -271,10 +271,10 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     if ($this->sendSms($this->getCallableNumber($mobile_number), $message)) {
       $token = $this->registerVerificationCode($mobile_number, $code);
 
-      $_SESSION['mobile_number_verification'][$this->getCallableNumber($mobile_number)] = array(
+      $_SESSION['mobile_number_verification'][$this->getCallableNumber($mobile_number)] = [
         'token' => $token,
         'verified' => FALSE,
-      );
+      ];
 
       return $token;
     }
@@ -292,11 +292,11 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     $hash = $this->codeHash($mobile_number, $token, $code);
 
     \Drupal::database()->insert('mobile_number_verification')
-      ->fields(array(
+      ->fields([
         'token' => $token,
         'timestamp' => $time,
         'verification_code' => $hash,
-      ))
+      ])
       ->execute();
 
     return $token;
@@ -310,7 +310,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
     if ($code && $token) {
       $hash = $this->codeHash($mobile_number, $token, $code);
       $query = \Drupal::database()->select('mobile_number_verification', 'm');
-      $query->fields('m', array('token'))
+      $query->fields('m', ['token'])
         ->condition('token', $token)
         ->condition('timestamp', time() - (60 * 60 * 24), '>')
         ->condition('verification_code', $hash);
@@ -351,7 +351,7 @@ class MobileNumberUtil implements MobileNumberUtilInterface {
    */
   public function smsCallback() {
     $module_handler = $this->moduleHandler;
-    $callback = array();
+    $callback = [];
 
     if ($module_handler->moduleExists('sms')) {
       $callback = 'mobile_number_send_sms';

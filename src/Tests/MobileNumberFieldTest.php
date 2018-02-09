@@ -16,7 +16,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberFieldTest extends WebTestBase {
 
-  public static $modules = array('mobile_number', 'sms', 'node');
+  public static $modules = ['mobile_number', 'sms', 'node'];
 
   /**
    * Mobile number util.
@@ -46,33 +46,33 @@ class MobileNumberFieldTest extends WebTestBase {
    */
   public function testNumberValidity() {
 
-    $local_numbers = array(
+    $local_numbers = [
       '0541234567' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
-    );
+    ];
 
-    $countries = array(
+    $countries = [
       'IL' => 'IL',
       'US' => 'US',
       NULL => 'Empty',
-    );
+    ];
 
-    $allowed_countries = array(
-      'IL' => array('IL' => 'IL'),
-      'US' => array('US' => 'US'),
-      'Mix' => array('US' => 'US', 'IL' => 'IL'),
-      'All' => array(),
-    );
+    $allowed_countries = [
+      'IL' => ['IL' => 'IL'],
+      'US' => ['US' => 'US'],
+      'Mix' => ['US' => 'US', 'IL' => 'IL'],
+      'All' => [],
+    ];
 
-    $input = array(
+    $input = [
       'country-code' => 'IL',
       'mobile' => '0541234567',
-    );
+    ];
     $name = 'validity';
-    $this->drupalCreateContentType(array('type' => $name));
+    $this->drupalCreateContentType(['type' => $name]);
     $this->createField($name, "field_$name", MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_NO, 1);
-    $user = $this->drupalCreateUser(array("create $name content"));
+    $user = $this->drupalCreateUser(["create $name content"]);
     $this->setCurrentUser($user);
 
     foreach ($allowed_countries as $type => $allowed) {
@@ -96,37 +96,37 @@ class MobileNumberFieldTest extends WebTestBase {
    * Test number validation.
    */
   public function testNumberUniqueness() {
-    $tries = array(
+    $tries = [
       'New values',
       'Resubmit values',
-    );
+    ];
 
-    $value_count = array(
+    $value_count = [
       1 => 'One value',
       2 => 'Two values',
-    );
+    ];
 
-    $number_types = array(
+    $number_types = [
       'Unverified',
       'Verified',
-    );
+    ];
 
-    $unique_types = array(
+    $unique_types = [
       MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_YES => 'Unique',
       MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_YES_VERIFIED => 'Unique verified',
-    );
+    ];
 
     $names = [];
     foreach ($value_count as $count => $count_text) {
       foreach ($unique_types as $unique => $unique_text) {
         $name = 'unique_' . $unique . '_count_' . $count;
-        $this->drupalCreateContentType(array('type' => $name));
+        $this->drupalCreateContentType(['type' => $name]);
         $this->createField($name, "field_$name", $unique, $count);
         $names[] = $name;
       }
     }
 
-    $user = $this->drupalCreateUser(array_map(function($element) {
+    $user = $this->drupalCreateUser(array_map(function ($element) {
       return "create $element content";
     }, $names));
     $this->setCurrentUser($user);
@@ -185,26 +185,26 @@ class MobileNumberFieldTest extends WebTestBase {
     $code = $this->util->generateVerificationCode();
 
     $required_name = 'ver_required';
-    $this->drupalCreateContentType(array('type' => $required_name));
+    $this->drupalCreateContentType(['type' => $required_name]);
     $this->createField($required_name, "field_$required_name", MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_NO, 1, MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_REQUIRED);
     $optional_name = 'ver_optional';
-    $this->drupalCreateContentType(array('type' => $optional_name));
+    $this->drupalCreateContentType(['type' => $optional_name]);
     $this->createField($optional_name, "field_$optional_name", MobileNumberUtilInterface::MOBILE_NUMBER_UNIQUE_NO, 1, MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL);
 
-    $tokens = array(
+    $tokens = [
       FALSE => 'Wrong token',
       NULL => 'No token',
       TRUE => 'Correct token',
-    );
+    ];
 
-    $codes = array(
+    $codes = [
       '000' => 'Wrong code',
       NULL => 'No code',
       $code => 'Correct code',
-    );
+    ];
 
-    $user = $this->drupalCreateUser(array("create $required_name content", "create $optional_name content"));
-    $admin = $this->drupalCreateUser(array("create $required_name content", 'bypass mobile number verification requirement'));
+    $user = $this->drupalCreateUser(["create $required_name content", "create $optional_name content"]);
+    $admin = $this->drupalCreateUser(["create $required_name content", 'bypass mobile number verification requirement']);
 
     $input['country-code'] = $country;
     $input['mobile'] = $number;
@@ -258,21 +258,21 @@ class MobileNumberFieldTest extends WebTestBase {
    * Create node with mobile number(s).
    */
   public function createMobileNumberNode($name, $number, $verified, $verified2 = NULL) {
-    $values = array();
-    $values["field_$name"][0] = array(
+    $values = [];
+    $values["field_$name"][0] = [
       'mobile' => $number,
       'country-code' => 'IL',
-    );
+    ];
     $mobile_number = $this->util->getMobileNumber($number);
     if ($verified) {
       $values["field_$name"][0]['verification_code'] = $code = $this->util->generateVerificationCode();
       $values["field_$name"][0]['verification_token'] = $this->util->registerVerificationCode($mobile_number, $code);
     }
     if (isset($verified2)) {
-      $values["field_$name"][1] = array(
+      $values["field_$name"][1] = [
         'mobile' => $number,
         'country-code' => 'IL',
-      );
+      ];
       if ($verified2) {
         $values["field_$name"][1]['verification_code'] = $code = $this->util->generateVerificationCode();
         $values["field_$name"][1]['verification_token'] = $this->util->registerVerificationCode($mobile_number, $code);
@@ -286,7 +286,7 @@ class MobileNumberFieldTest extends WebTestBase {
    * Create node with mobile number(s).
    */
   public function createMobileNumberNodeFromInput($name, $input) {
-    $values = array();
+    $values = [];
     $values["field_$name"][0] = $input;
     $mobile_number = $this->util->getMobileNumber($input['mobile'], $input['country-code']);
     return $this->submitNodeForm($name, $values, $mobile_number ? $this->util->getCallableNumber($mobile_number) : NULL);
@@ -297,8 +297,8 @@ class MobileNumberFieldTest extends WebTestBase {
    */
   public function submitNodeForm($node_type, $values, $number) {
 
-    $values += array(
-      'body'      => array(Language::LANGCODE_NOT_SPECIFIED => array(array())),
+    $values += [
+      'body'      => [Language::LANGCODE_NOT_SPECIFIED => [[]]],
       'title'     => $this->randomMachineName(8),
       'comment'   => 2,
       'changed'   => REQUEST_TIME,
@@ -311,7 +311,7 @@ class MobileNumberFieldTest extends WebTestBase {
       'type'      => $node_type,
       'revisions' => NULL,
       'language'  => Language::LANGCODE_NOT_SPECIFIED,
-    );
+    ];
 
     $node = \Drupal::entityTypeManager()
       ->getStorage('node')
@@ -336,7 +336,7 @@ class MobileNumberFieldTest extends WebTestBase {
   /**
    * Create mobile number field.
    */
-  public function createField($content_type, $field_name, $unique, $cardinality, $verify = MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL, $allowed_countries = array()) {
+  public function createField($content_type, $field_name, $unique, $cardinality, $verify = MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_OPTIONAL, $allowed_countries = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
 
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
@@ -352,13 +352,13 @@ class MobileNumberFieldTest extends WebTestBase {
       ->save();
 
     // Create the instance on the bundle.
-    $instance = array(
+    $instance = [
       'field_name' => $field_name,
       'entity_type' => 'node',
       'label' => 'Mobile Number',
       'bundle' => $content_type,
       'required' => TRUE,
-    );
+    ];
 
     FieldConfig::create($instance)
       ->setSetting('verify', $verify)
@@ -394,7 +394,7 @@ class MobileNumberFieldTest extends WebTestBase {
    */
   public function updateFieldConfig($name, $setting, $value) {
     /** @var \Drupal\field\FieldConfigInterface $field */
-    $fields = \Drupal::entityManager()->getStorage('field_config')->loadByProperties(array('field_name' => "field_$name"));
+    $fields = \Drupal::entityManager()->getStorage('field_config')->loadByProperties(['field_name' => "field_$name"]);
     $field = reset($fields);
 
     $new_field = FieldConfig::create($field->toArray());

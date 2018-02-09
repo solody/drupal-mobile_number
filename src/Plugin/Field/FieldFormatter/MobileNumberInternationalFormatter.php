@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Drupal\mobile_number\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FormatterBase;
@@ -28,7 +27,7 @@ class MobileNumberInternationalFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public static function defaultSettings() {
-    return parent::defaultSettings() + array('as_link' => FALSE);
+    return parent::defaultSettings() + ['as_link' => FALSE];
   }
 
   /**
@@ -37,11 +36,11 @@ class MobileNumberInternationalFormatter extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $settings = $this->getSettings() + static::defaultSettings();
 
-    $element['as_link'] = array(
+    $element['as_link'] = [
       '#type' => 'checkbox',
       '#title' => t('Show as TEL link'),
       '#default_value' => $settings['as_link'],
-    );
+    ];
 
     return parent::settingsForm($form, $form_state) + $element;
   }
@@ -50,7 +49,7 @@ class MobileNumberInternationalFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $summary = array();
+    $summary = [];
     $settings = $this->getSettings() + static::defaultSettings();
 
     if (!empty($settings['as_link'])) {
@@ -69,23 +68,23 @@ class MobileNumberInternationalFormatter extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    $element = array();
+    $element = [];
     $settings = $this->getSettings() + static::defaultSettings();
 
     foreach ($items as $delta => $item) {
       /** @var \Drupal\mobile_number\Plugin\Field\FieldType\MobileNumberItem $item */
-      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, array())) {
+      if ($mobile_number = $util->getMobileNumber($item->getValue()['value'], NULL, [])) {
         if (!empty($settings['as_link'])) {
-          $element[$delta] = array(
+          $element[$delta] = [
             '#type' => 'link',
             '#title' => $util->libUtil()->format($mobile_number, $this->phoneDisplayFormat),
             '#url' => Url::fromUri("tel:" . $util->getCallableNumber($mobile_number)),
-          );
+          ];
         }
         else {
-          $element[$delta] = array(
+          $element[$delta] = [
             '#plain_text' => $util->libUtil()->format($mobile_number, $this->phoneDisplayFormat),
-          );
+          ];
         }
       }
     }

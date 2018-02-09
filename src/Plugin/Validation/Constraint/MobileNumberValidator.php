@@ -30,7 +30,7 @@ class MobileNumberValidator extends ConstraintValidator {
       return;
     }
 
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
     $field_label = $item->getFieldDefinition()->getLabel();

@@ -25,14 +25,14 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationInterface, T
   /**
    * Libphonenumber Utility object.
    *
-   * @var \Drupal\mobile_number\MobileNumberUtilInterface $mobileNumberUtil
+   * @var \Drupal\mobile_number\MobileNumberUtilInterface
    */
   public $mobileNumberUtil;
 
   /**
    * Libphonenumber phone number object.
    *
-   * @var \libphonenumber\PhoneNumber $mobileNumber
+   * @var \libphonenumber\PhoneNumber
    */
   public $mobileNumber;
 
@@ -89,11 +89,11 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationInterface, T
     $numberClue = str_pad(substr($local_number, -3, 3), strlen($local_number), 'X', STR_PAD_LEFT);
     $numberClue = substr_replace($numberClue, '-', 3, 0);
 
-    $form['code'] = array('#type' => 'textfield', '#title' => t('Verification Code'), '#required' => TRUE, '#description' => t('A verification code was sent to %clue. Enter the @length-character code sent to your device.', array('@length' => $this->codeLength, '%clue' => $numberClue)));
+    $form['code'] = ['#type' => 'textfield', '#title' => t('Verification Code'), '#required' => TRUE, '#description' => t('A verification code was sent to %clue. Enter the @length-character code sent to your device.', ['@length' => $this->codeLength, '%clue' => $numberClue])];
 
     $form['actions']['#type'] = 'actions';
-    $form['actions']['login'] = array('#type' => 'submit', '#value' => t('Verify'));
-    $form['actions']['resend'] = array('#type' => 'submit', '#value' => t('Resend'), '#submit' => array('tfa_form_submit'), '#limit_validation_errors' => array());
+    $form['actions']['login'] = ['#type' => 'submit', '#value' => t('Verify')];
+    $form['actions']['resend'] = ['#type' => 'submit', '#value' => t('Resend'), '#submit' => ['tfa_form_submit'], '#limit_validation_errors' => []];
 
     return $form;
   }
@@ -142,7 +142,7 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationInterface, T
    * Return context for this plugin.
    */
   public function getPluginContext() {
-    return array('code' => $this->code, 'verification_token' => !empty($this->verificationToken) ? $this->verificationToken : '');
+    return ['code' => $this->code, 'verification_token' => !empty($this->verificationToken) ? $this->verificationToken : ''];
   }
 
   /**
@@ -157,16 +157,16 @@ class MobileNumberTfa extends TfaBasePlugin implements TfaValidationInterface, T
     try {
       $message = \Drupal::configFactory()->getEditable('mobile_number.settings')->get('tfa_message');
       $message = $message ? $message : $this->mobileNumberUtil->MOBILE_NUMBER_DEFAULT_SMS_MESSAGE;
-      if (!($this->verificationToken = $this->mobileNumberUtil->sendVerification($this->mobileNumber, $message, $this->code, array('user' => $user)))) {
+      if (!($this->verificationToken = $this->mobileNumberUtil->sendVerification($this->mobileNumber, $message, $this->code, ['user' => $user]))) {
         return FALSE;
       }
 
       // @todo Consider storing date_sent or date_updated to inform user.
-      \Drupal::logger('mobile_number_tfa')->info('TFA validation code sent to user @uid', array('@uid' => $this->context['uid']));
+      \Drupal::logger('mobile_number_tfa')->info('TFA validation code sent to user @uid', ['@uid' => $this->context['uid']]);
       return TRUE;
     }
     catch (Exception $e) {
-      \Drupal::logger('mobile_number_tfa')->error('Send message error to user @uid. Status code: @code, message: @message', array('@uid' => $this->context['uid'], '@code' => $e->getCode(), '@message' => $e->getMessage()));
+      \Drupal::logger('mobile_number_tfa')->error('Send message error to user @uid. Status code: @code, message: @message', ['@uid' => $this->context['uid'], '@code' => $e->getCode(), '@message' => $e->getMessage()]);
       return FALSE;
     }
   }

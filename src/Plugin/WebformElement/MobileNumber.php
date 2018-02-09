@@ -29,7 +29,7 @@ class MobileNumber extends WebformElementBase {
       'multiple' => FALSE,
       'multiple__header_label' => '',
       'default_country' => 'US',
-      'countries' => array(),
+      'countries' => [],
       'mn_placeholder' => 'Phone number',
       'as_link' => FALSE,
     ];
@@ -49,38 +49,38 @@ class MobileNumber extends WebformElementBase {
       '#title' => $this->t('Mobile Number Settings'),
     ];
 
-    $form['mobile_number']['default_country'] = array(
+    $form['mobile_number']['default_country'] = [
       '#type' => 'select',
       '#title' => t('Default Country'),
-      '#options' => $util->getCountryOptions(array(), TRUE),
+      '#options' => $util->getCountryOptions([], TRUE),
       '#description' => t('Default country for mobile number input.'),
       '#required' => TRUE,
-      '#element_validate' => array(array(
+      '#element_validate' => [[
         $this,
         'settingsFormValidate',
-      ),
-      ),
-    );
+      ],
+      ],
+    ];
 
-    $form['mobile_number']['countries'] = array(
+    $form['mobile_number']['countries'] = [
       '#type' => 'select',
       '#title' => t('Allowed Countries'),
-      '#options' => $util->getCountryOptions(array(), TRUE),
+      '#options' => $util->getCountryOptions([], TRUE),
       '#description' => t('Allowed counties for the mobile number. If none selected, then all are allowed.'),
       '#multiple' => TRUE,
-      '#attached' => array('library' => array('mobile_number/element')),
-    );
+      '#attached' => ['library' => ['mobile_number/element']],
+    ];
 
-    $form['mobile_number']['mn_placeholder'] = array(
+    $form['mobile_number']['mn_placeholder'] = [
       '#type' => 'textfield',
       '#title' => t('Number Placeholder'),
       '#description' => t('Number field placeholder.'),
-    );
+    ];
 
-    $form['display']['as_link'] = array(
+    $form['display']['as_link'] = [
       '#type' => 'checkbox',
       '#title' => t('Show as TEL link'),
-    );
+    ];
 
     return $form;
   }
@@ -104,15 +104,15 @@ class MobileNumber extends WebformElementBase {
   public function setDefaultValue(array &$element) {
     parent::setDefaultValue($element);
 
-    $settings = array(
+    $settings = [
       'default_country' => !empty($element['#default_country']) ? $element['#default_country'] : 'US',
-    );
+    ];
 
-    $element += array(
-      '#default_value' => array(
+    $element += [
+      '#default_value' => [
         'country' => $settings['default_country'],
-      ),
-    );
+      ],
+    ];
 
   }
 
@@ -122,18 +122,18 @@ class MobileNumber extends WebformElementBase {
   public function prepare(array &$element, WebformSubmissionInterface $webform_submission = NULL) {
     parent::prepare($element, $webform_submission);
 
-    $settings = array(
-      'countries' => !empty($element['#countries']) ? $element['#countries'] : array(),
+    $settings = [
+      'countries' => !empty($element['#countries']) ? $element['#countries'] : [],
       'placeholder' => isset($element['#mn_placeholder']) ? $element['#mn_placeholder'] : 'Phone number',
-    );
+    ];
 
-    $element += array(
+    $element += [
       '#mobile_number' => [
         'allowed_countries' => array_combine($settings['countries'], $settings['countries']),
         'verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
         'placeholder' => isset($settings['placeholder']) ? $settings['placeholder'] : NULL,
       ],
-    );
+    ];
   }
 
   /**
@@ -161,18 +161,18 @@ class MobileNumber extends WebformElementBase {
     }
     $as_link = !empty($element['#as_link']);
 
-    if ($mobile_number = $util->getMobileNumber($value['value'], NULL, array())) {
+    if ($mobile_number = $util->getMobileNumber($value['value'], NULL, [])) {
       if (!empty($as_link)) {
-        $element = array(
+        $element = [
           '#type' => 'link',
           '#title' => $util->libUtil()->format($mobile_number, $phoneDisplayFormat),
           '#url' => Url::fromUri("tel:" . $util->getCallableNumber($mobile_number)),
-        );
+        ];
       }
       else {
-        $element = array(
+        $element = [
           '#plain_text' => $util->libUtil()->format($mobile_number, $phoneDisplayFormat),
-        );
+        ];
       }
     }
 

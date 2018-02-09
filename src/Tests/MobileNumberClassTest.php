@@ -12,7 +12,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberClassTest extends WebTestBase {
 
-  public static $modules = array('mobile_number', 'sms');
+  public static $modules = ['mobile_number', 'sms'];
 
   /**
    * Mobile number util.
@@ -42,19 +42,19 @@ class MobileNumberClassTest extends WebTestBase {
    */
   public function testNumberValidity() {
 
-    $local_numbers = array(
+    $local_numbers = [
       '+972547322602' => 'International IL',
       '091234567' => 'None mobile IL',
       '0541234567' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
-    );
+    ];
 
-    $countries = array(
+    $countries = [
       'IL' => 'IL',
       'US' => 'US',
       NULL => 'Empty',
-    );
+    ];
 
     foreach ($countries as $country => $country_text) {
       foreach ($local_numbers as $number => $number_text) {
@@ -94,7 +94,7 @@ class MobileNumberClassTest extends WebTestBase {
 
     $this->assertTrue($this->util->getCountryCode('IL') == 972, "getCountryCode()");
     $this->assertTrue(count($this->util->getCountryOptions()), "getCountryOptions()");
-    $this->assertTrue(count($this->util->getCountryOptions(array('IL' => 'IL'))) == 1, "getCountryOptions() filtered");
+    $this->assertTrue(count($this->util->getCountryOptions(['IL' => 'IL'])) == 1, "getCountryOptions() filtered");
     $this->assertTrue($this->util->getCountryName('IL') == 'Israel', "getCountryName()");
 
     $code = $this->util->generateVerificationCode(6);

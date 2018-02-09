@@ -54,7 +54,7 @@ class RequestVerificationCodeResource extends ResourceBase {
    *   A logger instance.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   A current user instance.
-   * @param MobileNumberUtilInterface $util
+   * @param \Drupal\mobile_number\MobileNumberUtilInterface $util
    *   Mobile number utility service.
    */
   public function __construct(
@@ -90,7 +90,7 @@ class RequestVerificationCodeResource extends ResourceBase {
   /**
    * Responds send verification code POST request.
    *
-   * @param string|NULL $number
+   * @param string|null $number
    *   Callable mobile number.
    *
    * @return \Drupal\rest\ResourceResponse
@@ -125,7 +125,7 @@ class RequestVerificationCodeResource extends ResourceBase {
       throw new HttpException(500, 'An error occurred while sending sms.');
     }
 
-    $response = new Response(json_encode(array('verification_token' => $token)));
+    $response = new Response(json_encode(['verification_token' => $token]));
 
     return $response;
   }

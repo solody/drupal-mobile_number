@@ -12,7 +12,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberElementTest extends WebTestBase {
 
-  public static $modules = array('mobile_number', 'sms');
+  public static $modules = ['mobile_number', 'sms'];
 
   /**
    * Mobile number util.
@@ -42,36 +42,36 @@ class MobileNumberElementTest extends WebTestBase {
    */
   public function testNumberValidity() {
 
-    $local_numbers = array(
+    $local_numbers = [
       '0541234567' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
-    );
+    ];
 
-    $countries = array(
+    $countries = [
       'IL' => 'IL',
       'US' => 'US',
       NULL => 'Empty',
-    );
+    ];
 
-    $allowed_countries = array(
-      'IL' => array('IL' => 'IL'),
-      'US' => array('US' => 'US'),
-      'Mix' => array('US' => 'US', 'IL' => 'IL'),
-      'All' => array(),
-    );
+    $allowed_countries = [
+      'IL' => ['IL' => 'IL'],
+      'US' => ['US' => 'US'],
+      'Mix' => ['US' => 'US', 'IL' => 'IL'],
+      'All' => [],
+    ];
 
-    $element = array(
+    $element = [
       '#type' => 'mobile_number',
       '#title' => 'M',
       '#required' => TRUE,
-      '#mobile_number' => array(),
-    );
+      '#mobile_number' => [],
+    ];
 
-    $input = array(
+    $input = [
       'country-code' => 'IL',
       'mobile' => '0541234567',
-    );
+    ];
 
     foreach ($allowed_countries as $type => $allowed) {
       foreach ($local_numbers as $ln => $local_number) {
@@ -101,10 +101,10 @@ class MobileNumberElementTest extends WebTestBase {
     $form_id = $this->randomMachineName();
     $form_builder = \Drupal::formBuilder();
 
-    $form = array();
+    $form = [];
     $form_state = new FormState();
     $form_state->clearErrors();
-    $form['op'] = array('#type' => 'submit', '#value' => t('Submit'));
+    $form['op'] = ['#type' => 'submit', '#value' => t('Submit')];
     $form['mobile_number'] = $element;
     $form_state->setUserInput([
       'mobile_number' => $input,

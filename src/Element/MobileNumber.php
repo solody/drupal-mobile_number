@@ -40,16 +40,16 @@ class MobileNumber extends FormElement {
    * {@inheritdoc}
    */
   public function getInfo() {
-    return array(
+    return [
       '#input' => TRUE,
-      '#process' => array(
-        array($this, 'mobileNumberProcess'),
-      ),
-      '#element_validate' => array(
-        array($this, 'mobileNumberValidate'),
-      ),
-      '#mobile_number' => array(),
-    );
+      '#process' => [
+        [$this, 'mobileNumberProcess'],
+      ],
+      '#element_validate' => [
+        [$this, 'mobileNumberValidate'],
+      ],
+      '#mobile_number' => [],
+    ];
   }
 
   /**
@@ -66,15 +66,15 @@ class MobileNumber extends FormElement {
    *   Value.
    */
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
-    $result = array();
+    $result = [];
     if ($input) {
-      $settings = !empty($element['#mobile_number']) ? $element['#mobile_number'] : array();
-      $settings += array('allowed_countries' => array());
+      $settings = !empty($element['#mobile_number']) ? $element['#mobile_number'] : [];
+      $settings += ['allowed_countries' => []];
       $country = !empty($input['country-code']) ? $input['country-code'] : (count($settings['allowed_countries']) == 1 ? key($settings['allowed_countries']) : NULL);
       $mobile_number = $util->getMobileNumber($input['mobile'], $country);
-      $result = array(
+      $result = [
         'value' => $mobile_number ? $util->getCallableNumber($mobile_number) : '',
         'country' => $country,
         'local_number' => $input['mobile'],
@@ -82,36 +82,40 @@ class MobileNumber extends FormElement {
         'verified' => 0,
         'verification_token' => !empty($input['verification_token']) ? $input['verification_token'] : NULL,
         'verification_code' => !empty($input['verification_code']) ? $input['verification_code'] : NULL,
-      );
+      ];
     }
     else {
-      $result = !empty($element['#default_value']) ? $element['#default_value'] : array();
+      $result = !empty($element['#default_value']) ? $element['#default_value'] : [];
     }
 
     return $result;
   }
-
+  
   /**
    * Mobile number element process callback.
    *
-   * @param array $element
+   * @param  $element
    *   Element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   * @param array $complete_form
+   *   Complete form.
    *
    * @return array
-   *   Processed element.
+   *   Processed array.
    */
   public function mobileNumberProcess($element, FormStateInterface $form_state, array $complete_form) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $element['#tree'] = TRUE;
     $field_name = $element['#name'];
     $field_path = implode('][', $element['#parents']);
     $id = $element['#id'];
     $op = $this->getOp($element, $form_state);
-    $element += array(
-      '#default_value' => array(),
-      '#mobile_number' => array(),
-    );
+    $element += [
+      '#default_value' => [],
+      '#mobile_number' => [],
+    ];
 
     $errors = $form_state->getErrors();
     foreach ($errors as $path => $message) {
@@ -120,23 +124,23 @@ class MobileNumber extends FormElement {
       }
     }
 
-    $element['#mobile_number'] += array(
-      'allowed_countries' => array(),
+    $element['#mobile_number'] += [
+      'allowed_countries' => [],
       'verify' => MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE,
       'message' => MobileNumberUtilInterface::MOBILE_NUMBER_DEFAULT_SMS_MESSAGE,
       'tfa' => FALSE,
-      'token_data' => array(),
+      'token_data' => [],
       'placeholder' => NULL,
-    );
+    ];
     $settings = $element['#mobile_number'];
 
-    $element['#default_value'] += array(
+    $element['#default_value'] += [
       'value' => '',
       'country' => (count($settings['allowed_countries']) == 1) ? key($settings['allowed_countries']) : 'US',
       'local_number' => '',
       'verified' => 0,
       'tfa' => 0,
-    );
+    ];
 
     if ($default_mobile_number = $util->getMobileNumber($element['#default_value']['value'])) {
       $element['#default_value']['country'] = $util->getCountry($default_mobile_number);
@@ -147,70 +151,70 @@ class MobileNumber extends FormElement {
     $element['#prefix'] = "<div class=\"mobile-number-field form-item $field_name\" id=\"$id\">";
     $element['#suffix'] = '</div>';
 
-    $element['label'] = array(
+    $element['label'] = [
       '#type' => 'label',
       '#title' => $element['#title'],
       '#required' => $element['#required'],
       '#title_display' => $element['#title_display'],
-    );
+    ];
 
     $mobile_number = NULL;
     $verified = FALSE;
     $countries = $util->getCountryOptions($settings['allowed_countries'], TRUE);
-    $countries += $util->getCountryOptions(array($element['#default_value']['country'] => $element['#default_value']['country']), TRUE);
+    $countries += $util->getCountryOptions([$element['#default_value']['country'] => $element['#default_value']['country']], TRUE);
     $default_country = $element['#default_value']['country'];
 
     if (!empty($value['value']) && $mobile_number = $util->getMobileNumber($value['value'])) {
       $verified = ($settings['verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) && static::isVerified($element);
       $default_country = $util->getCountry($mobile_number);
       $country = $util->getCountry($mobile_number);
-      $countries += $util->getCountryOptions(array($country => $country));
+      $countries += $util->getCountryOptions([$country => $country]);
     }
 
-    $element['country-code'] = array(
+    $element['country-code'] = [
       '#type' => 'select',
       '#options' => $countries,
       '#default_value' => $default_country,
       '#access' => !(count($countries) == 1),
-      '#attributes' => array('class' => array('country')),
+      '#attributes' => ['class' => ['country']],
       '#title' => t('Country Code'),
       '#title_display' => 'invisible',
-    );
+    ];
 
-    $element['mobile'] = array(
+    $element['mobile'] = [
       '#type' => 'textfield',
       '#default_value' => $mobile_number ? $util->libUtil()
         ->format($mobile_number, 2) : NULL,
       '#title' => t('Phone number'),
       '#title_display' => 'invisible',
       '#suffix' => '<div class="form-item verified ' . ($verified ? 'show' : '') . '" title="' . t('Verified') . '"><span>' . t('Verified') . '</span></div>',
-      '#attributes' => array(
-        'class' => array('local-number'),
+      '#attributes' => [
+        'class' => ['local-number'],
         'placeholder' => isset($settings['placeholder']) ? ($settings['placeholder'] ? t($settings['placeholder']) : '') : t('Phone number'),
-      ),
-    );
+      ],
+    ];
 
     $element['mobile']['#attached']['library'][] = 'mobile_number/element';
 
     if ($settings['verify'] != MobileNumberUtilInterface::MOBILE_NUMBER_VERIFY_NONE) {
-      $element['send_verification'] = array(
+      $element['send_verification'] = [
         '#type' => 'button',
         '#value' => t('Send verification code'),
-        '#ajax' => array(
+        '#ajax' => [
           'callback' => 'Drupal\mobile_number\Element\MobileNumber::verifyAjax',
           'wrapper' => $id,
           'effect' => 'fade',
-        ),
+        ],
         '#name' => implode('__', $element['#parents']) . '__send_verification',
         '#mobile_number_op' => 'mobile_number_send_verification',
-        '#attributes' => array(
-          'class' => array(
+        '#attributes' => [
+          'class' => [
             !$verified ? 'show' : '',
             'send-button',
-          ),
-        ),
-        '#submit' => array(),
-      );
+          ],
+        ],
+        '#submit' => [],
+      ];
 
       $user_input = $form_state->getUserInput();
       $vc_parents = $element['#parents'];
@@ -221,47 +225,47 @@ class MobileNumber extends FormElement {
       }
 
       $verify_prompt = (!$verified && $op && (!$errors || $op == 'mobile_number_verify'));
-      $element['verification_code'] = array(
+      $element['verification_code'] = [
         '#type' => 'textfield',
         '#title' => t('Verification Code'),
         '#prefix' => '<div class="verification ' . ($verify_prompt ? 'show' : '') . '"><div class="description">' . t('A verification code has been sent to your mobile. Enter it here.') . '</div>',
-      );
+      ];
 
-      $element['verify'] = array(
+      $element['verify'] = [
         '#type' => 'button',
         '#value' => t('Verify'),
-        '#ajax' => array(
+        '#ajax' => [
           'callback' => 'Drupal\mobile_number\Element\MobileNumber::verifyAjax',
           'wrapper' => $id,
           'effect' => 'fade',
-        ),
+        ],
         '#suffix' => '</div>',
         '#name' => implode('__', $element['#parents']) . '__verify',
         '#mobile_number_op' => 'mobile_number_verify',
-        '#attributes' => array(
-          'class' => array(
+        '#attributes' => [
+          'class' => [
             'verify-button',
-          ),
-        ),
-        '#submit' => array(),
-      );
+          ],
+        ],
+        '#submit' => [],
+      ];
 
       if (!empty($settings['tfa'])) {
-        $element['tfa'] = array(
+        $element['tfa'] = [
           '#type' => 'checkbox',
           '#title' => t('Enable two-factor authentication'),
           '#default_value' => !empty($value['tfa']) ? 1 : 0,
           '#prefix' => '<div class="mobile-number-tfa">',
           '#suffix' => '</div>',
-        );
+        ];
       }
 
       $storage = $form_state->getStorage();
-      $element['verification_token'] = array(
+      $element['verification_token'] = [
         '#type' => 'hidden',
         '#value' => !empty($storage['mobile_number_fields'][$field_path]['token']) ? $storage['mobile_number_fields'][$field_path]['token'] : '',
         '#name' => $field_name . '[verification_token]',
-      );
+      ];
     }
 
     if (!empty($element['#description'])) {
@@ -284,7 +288,7 @@ class MobileNumber extends FormElement {
    *   Element.
    */
   public function mobileNumberValidate($element, FormStateInterface $form_state, &$complete_form) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
     $settings = $element['#mobile_number'];
     $op = $this->getOp($element, $form_state);
@@ -292,21 +296,21 @@ class MobileNumber extends FormElement {
     $tree_parents = $element['#parents'];
     $field_path = implode('][', $tree_parents);
     $input = NestedArray::getValue($form_state->getUserInput(), $tree_parents);
-    $input = $input ? $input : array();
+    $input = $input ? $input : [];
     $mobile_number = NULL;
-    $countries = $util->getCountryOptions(array(), TRUE);
+    $countries = $util->getCountryOptions([], TRUE);
     $token = !empty($element['#value']['verification_token']) ? $element['#value']['verification_token'] : FALSE;
 
     if ($input) {
-      $input += count($settings['allowed_countries']) == 1 ? array('country-code' => key($settings['allowed_countries'])) : array();
+      $input += count($settings['allowed_countries']) == 1 ? ['country-code' => key($settings['allowed_countries'])] : [];
       try {
         $mobile_number = $util->testMobileNumber($input['mobile'], $input['country-code']);
         $verified = static::isVerified($element);
 
         if ($op == 'mobile_number_send_verification' && !$util->checkFlood($mobile_number, 'sms')) {
-          $form_state->setError($element['mobile'], t('Too many verification code requests for %field, please try again shortly.', array(
+          $form_state->setError($element['mobile'], t('Too many verification code requests for %field, please try again shortly.', [
             '%field' => $field_label,
-          )));
+          ]));
         }
         elseif ($op == 'mobile_number_send_verification' && !$verified && !($token = $util->sendVerification($mobile_number, $settings['message'], $util->generateVerificationCode(), $settings['token_data']))) {
           $form_state->setError($element['mobile'], t('An error occurred while sending sms.'));
@@ -322,41 +326,41 @@ class MobileNumber extends FormElement {
         switch ($e->getCode()) {
           case MobileNumberException::ERROR_NO_NUMBER:
             if (!empty($element['#required']) || $op) {
-              $form_state->setError($element['mobile'], t('Phone number in %field is required.', array(
+              $form_state->setError($element['mobile'], t('Phone number in %field is required.', [
                 '%field' => $field_label,
-              )));
+              ]));
             }
             break;
 
           case MobileNumberException::ERROR_INVALID_NUMBER:
           case MobileNumberException::ERROR_WRONG_TYPE:
-            $form_state->setError($element['mobile'], t('The phone number %value provided for %field is not a valid mobile number for country %country.', array(
+            $form_state->setError($element['mobile'], t('The phone number %value provided for %field is not a valid mobile number for country %country.', [
               '%value' => $input['mobile'],
               '%field' => $field_label,
               '%country' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
-            )));
+            ]));
 
             break;
 
           case MobileNumberException::ERROR_WRONG_COUNTRY:
-            $form_state->setError($element['mobile'], t('The country %value provided for %field does not match the mobile number prefix.', array(
+            $form_state->setError($element['mobile'], t('The country %value provided for %field does not match the mobile number prefix.', [
               '%value' => !empty($countries[$input['country-code']]) ? $countries[$input['country-code']] : '',
               '%field' => $field_label,
-            )));
+            ]));
             break;
         }
       }
     }
 
     if (!empty($input['mobile'])) {
-      $input += count($settings['allowed_countries']) == 1 ? array('country-code' => key($settings['allowed_countries'])) : array();
+      $input += count($settings['allowed_countries']) == 1 ? ['country-code' => key($settings['allowed_countries'])] : [];
       if ($mobile_number = $util->getMobileNumber($input['mobile'], $input['country-code'])) {
         $country = $util->getCountry($mobile_number);
         if ($settings['allowed_countries'] && empty($settings['allowed_countries'][$country])) {
-          $form_state->setError($element['country-code'], t('The country %value provided for %field is not an allowed country.', array(
+          $form_state->setError($element['country-code'], t('The country %value provided for %field is not an allowed country.', [
             '%value' => $util->getCountryName($country),
             '%field' => $field_label,
-          )));
+          ]));
         }
       }
     }
@@ -382,7 +386,7 @@ class MobileNumber extends FormElement {
    *   Ajax response.
    */
   public static function verifyAjax($complete_form, FormStateInterface $form_state) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
     $element = static::getTriggeringElementParent($complete_form, $form_state);
@@ -422,25 +426,26 @@ class MobileNumber extends FormElement {
         }
       }
     }
-    
-    $element['messages'] = array('#type' => 'status_messages');
+
+    $element['messages'] = ['#type' => 'status_messages'];
     unset($element['_weight']);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(NULL, $element));
-    
+
     $settings = [];
 
     if ($verify_prompt) {
       $settings['mobileNumberVerificationPrompt'] = $element['#id'];
-    } else {
+    }
+    else {
       $settings['mobileNumberHideVerificationPrompt'] = $element['#id'];
     }
 
     if ($verified) {
       $settings['mobileNumberVerified'] = $element['#id'];
     }
-    
-    if($settings) {
+
+    if ($settings) {
       $response->addCommand(new SettingsCommand($settings));
     }
 
@@ -464,10 +469,10 @@ class MobileNumber extends FormElement {
     $op = !empty($triggering_element['#mobile_number_op']) ? $triggering_element['#mobile_number_op'] : NULL;
     $button = !empty($triggering_element['#name']) ? $triggering_element['#name'] : NULL;
 
-    if (!in_array($button, array(
+    if (!in_array($button, [
       implode('__', $element['#parents']) . '__send_verification',
       implode('__', $element['#parents']) . '__verify',
-    ))
+    ])
     ) {
       $op = NULL;
     }
@@ -502,18 +507,18 @@ class MobileNumber extends FormElement {
    * @param bool $input_value
    *   Whether to use the input value or the default value, TRUE = input value.
    *
-   * @return \libphonenumber\PhoneNumber|NULL
+   * @return \libphonenumber\PhoneNumber|null
    *   Mobile number. Null if empty, or not valid, mobile number.
    */
   public static function getMobileNumber($element, $input_value = TRUE) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
     if ($input_value) {
-      $values = !empty($element['#value']['local_number']) ? $element['#value'] : array();
+      $values = !empty($element['#value']['local_number']) ? $element['#value'] : [];
     }
     else {
-      $values = !empty($element['#default_value']['local_number']) ? $element['#default_value'] : array();
+      $values = !empty($element['#default_value']['local_number']) ? $element['#default_value'] : [];
     }
     if ($values) {
       return $util->getMobileNumber($values['local_number'], $values['country']);
@@ -532,7 +537,7 @@ class MobileNumber extends FormElement {
    *   True if verified, false otherwise.
    */
   public static function isVerified($element) {
-    /** @var MobileNumberUtilInterface $util */
+    /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
     $util = \Drupal::service('mobile_number.util');
 
     $mobile_number = static::getMobileNumber($element);

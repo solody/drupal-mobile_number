@@ -12,7 +12,7 @@ use Drupal\sms\Message\SmsMessage;
  * Implements hook_menu().
  */
 function mobile_number_menu() {
-  $items = array();
+  $items = [];
 
   return $items;
 }
@@ -54,7 +54,7 @@ function mobile_number_send_sms($number, $message) {
 /**
  * Helper function for get all supported countries for views.
  */
-function mobile_number_views_country_options($allowed_countries = array()) {
+function mobile_number_views_country_options($allowed_countries = []) {
   /** @var \Drupal\mobile_number\MobileNumberUtilInterface $util */
   $util = \Drupal::service('mobile_number.util');
   return $util->getCountryOptions($allowed_countries, TRUE);

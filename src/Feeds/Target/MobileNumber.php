@@ -58,7 +58,7 @@ class MobileNumber extends FieldTargetBase implements ConfigurableTargetInterfac
       $values['verified'] = 0;
     }
     else {
-      $values = array();
+      $values = [];
     }
   }
 
