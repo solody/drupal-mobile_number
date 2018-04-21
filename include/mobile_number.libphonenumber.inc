@@ -18,6 +18,8 @@ class MobileNumberAutoload {
    * Load.
    */
   public static function load() {
+    module_load_include('module', 'libraries');
+    
     $classLoader = new ClassLoader();
     $classLoader->set('libphonenumber', array(libraries_get_path('libphonenumber') . '/src'));
     $classLoader->setPsr4('libphonenumber\\', array(libraries_get_path('libphonenumber') . '/src'));
