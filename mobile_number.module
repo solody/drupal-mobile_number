@@ -596,22 +596,19 @@ function mobile_number_tfa_account_number($uid) {
  * Implements hook_form_FORM_ID_alter().
  */
 function mobile_number_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
-  $instance = $form['#instance'];
-  $settings = $instance['widget']['settings'];
-
-  if ($instance['entity_type'] == 'user' && $form['#field']['type'] == 'mobile_number') {
-    $instance['tfa'] = array(
+  if ($form['#instance']['entity_type'] == 'user' && $form['#field']['type'] == 'mobile_number') {
+    $form['instance']['tfa'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use this field for two-factor authentication'),
       '#description' => t("If enabled, users will be able to choose if to use the number for two factor authentication. Only one field can be set true for this value, verification must be enabled, and the field must be of cardinality 1. Users are required to verify their number when enabling their two-factor authenticaion. <a href='https://www.drupal.org/project/tfa' target='_blank'>Two Factor Authentication</a> must be installed, as well as a supported sms provider such as <a href='https://www.drupal.org/project/smsframework' target='_blank'>SMS Framework</a>."),
       '#default_value' => variable_get('mobile_number_tfa_field', '') === $form['#instance']['field_name'],
       '#weight' => $form['instance']['required']['#weight'] + .2,
-      '#disabled' => (variable_get('tfa_enabled', FALSE) && mobile_number_sms_sending_is_enabled()),
+      '#disabled' => !(variable_get('tfa_enabled', FALSE) && mobile_number_sms_sending_is_enabled()),
     );
 
     if (variable_get('tfa_enabled', FALSE) && mobile_number_sms_sending_is_enabled()) {
-      $instance['tfa']['#states'] = array(
-        'disabled' => array('input[name="instance[settings][verify]"]' => array('value' => MOBILE_NUMBER_VERIFY_NONE)),
+      $form['instance']['tfa']['#states'] = array(
+        'disabled' => array('input[name="instance[widget][settings][verify]"]' => array('value' => MOBILE_NUMBER_VERIFY_NONE)),
         'enabled' => array('select[name="field[cardinality]"]' => array('value' => '1')),
       );
     }
@@ -624,7 +621,7 @@ function mobile_number_form_field_ui_field_edit_form_alter(&$form, &$form_state)
  * Submit callback for field_ui_field_edit_form.
  */
 function mobile_number_form_field_ui_field_edit_form_submit($form, $form_state) {
-  $tfa = !empty($form_state['values']['instance']['widget']['settings']['tfa']);
+  $tfa = !empty($form_state['values']['instance']['tfa']);
   if (!empty($tfa)) {
     variable_set('mobile_number_tfa_field', $form['#instance']['field_name']);
   }
