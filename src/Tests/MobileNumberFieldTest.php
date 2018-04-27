@@ -301,7 +301,7 @@ class MobileNumberFieldTest extends WebTestBase {
       'body'      => [Language::LANGCODE_NOT_SPECIFIED => [[]]],
       'title'     => $this->randomMachineName(8),
       'comment'   => 2,
-      'changed'   => REQUEST_TIME,
+      'changed'   => \Drupal::time()->getRequestTime(),
       'moderate'  => 0,
       'promote'   => 0,
       'revision'  => 1,
