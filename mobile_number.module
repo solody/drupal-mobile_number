@@ -916,7 +916,7 @@ function mobile_number_element_validate($element, &$form_state) {
   $countries = MobileNumber::getCountryOptions(array(), TRUE);
   $verified = FALSE;
   if ($input) {
-    $input += count($widget_settings['allowed_countries']) == 1 ? array('country-code' => key($widget_settings['allowed_countries'])) : array();
+    $input += count($widget_settings['allowed_countries']) == 1 ? array('country-code' => key($widget_settings['allowed_countries'])) : array('country-code' => NULL);
     try {
       $mobile_number = new MobileNumber($input['mobile'], $input['country-code']);
       $verified = $mobile_number->isVerified();
