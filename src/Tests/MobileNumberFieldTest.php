@@ -47,7 +47,7 @@ class MobileNumberFieldTest extends WebTestBase {
   public function testNumberValidity() {
 
     $local_numbers = [
-      '0541234567' => 'Valid IL',
+      '0502345678' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
     ];
@@ -67,7 +67,7 @@ class MobileNumberFieldTest extends WebTestBase {
 
     $input = [
       'country-code' => 'IL',
-      'mobile' => '0541234567',
+      'mobile' => '0502345678',
     ];
     $name = 'validity';
     $this->drupalCreateContentType(['type' => $name]);
@@ -83,7 +83,7 @@ class MobileNumberFieldTest extends WebTestBase {
 
           $this->updateFieldConfig($name, 'countries', $allowed);
           $errors = $this->createMobileNumberNodeFromInput($name, $input);
-          $valid = '0541234567' == $ln && ($type == 'IL' || $type == 'All' || $type == 'Mix') && $c == 'IL';
+          $valid = '0502345678' == $ln && ($type == 'IL' || $type == 'All' || $type == 'Mix') && $c == 'IL';
 
           $success = $valid ? 'Success' : 'Failure';
           $this->assertTrue($valid == !$errors, "$country country, $local_number local number, allowed $type: $success. " . ($errors ? reset($errors) : ''), 'Number Validity');
@@ -178,9 +178,9 @@ class MobileNumberFieldTest extends WebTestBase {
    * Test number verification.
    */
   public function testVerification() {
-    $number = '0541234567';
+    $number = '0502345678';
     $country = 'IL';
-    $value = '+972541234567';
+    $value = '+972502345678';
     $mobile_number = $this->util->getMobileNumber($value);
     $code = $this->util->generateVerificationCode();
 

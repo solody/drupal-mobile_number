@@ -43,7 +43,7 @@ class MobileNumberClassTest extends WebTestBase {
   public function testNumberValidity() {
 
     $local_numbers = [
-      '+972547322602' => 'International IL',
+      '+972502345678' => 'International IL',
       '091234567' => 'None mobile IL',
       '0541234567' => 'Valid IL',
       '111' => 'Invalid IL',
@@ -69,11 +69,11 @@ class MobileNumberClassTest extends WebTestBase {
         $supposed_valid = FALSE;
         switch ($country) {
           case 'IL':
-            $supposed_valid = $number == '+972547322602' || $number == '0541234567';
+            $supposed_valid = $number == '+972502345678' || $number == '0541234567';
             break;
 
           case NULL:
-            $supposed_valid = $number == '+972547322602';
+            $supposed_valid = $number == '+972502345678';
             break;
         }
 

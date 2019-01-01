@@ -43,7 +43,7 @@ class MobileNumberElementTest extends WebTestBase {
   public function testNumberValidity() {
 
     $local_numbers = [
-      '0541234567' => 'Valid IL',
+      '0502345678' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
     ];
@@ -70,7 +70,7 @@ class MobileNumberElementTest extends WebTestBase {
 
     $input = [
       'country-code' => 'IL',
-      'mobile' => '0541234567',
+      'mobile' => '0502345678',
     ];
 
     foreach ($allowed_countries as $type => $allowed) {
@@ -81,7 +81,7 @@ class MobileNumberElementTest extends WebTestBase {
           $input['mobile'] = $ln;
 
           $errors = $this->submitFormElement($element, $input);
-          $valid = '0541234567' == $ln && ($type == 'IL' || $type == 'All' || $type == 'Mix') && $c == 'IL';
+          $valid = '0502345678' == $ln && ($type == 'IL' || $type == 'All' || $type == 'Mix') && $c == 'IL';
 
           $success = $valid ? 'Success' : 'Failure';
           $this->assertTrue($valid == !$errors, "$country country, $local_number local number, allowed $type: $success.", 'Number Validity');
