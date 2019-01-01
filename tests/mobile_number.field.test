@@ -70,7 +70,7 @@ class MobileNumberFieldTestCase extends DrupalWebTestCase {
       $name = 'unique_' . $unique . '_count_2';
       foreach ($number_types as $verified => $verified_text) {
         foreach ($number_types as $verified2 => $verified_text2) {
-          $errors = $this->createMobileNumberNode($name, "+9725411111$verified$verified2", $verified, $verified2);
+          $errors = $this->createMobileNumberNode($name, "+9725021111$verified$verified2", $verified, $verified2);
           $valid = FALSE;
           switch ($unique) {
             case MOBILE_NUMBER_UNIQUE_YES_VERIFIED:

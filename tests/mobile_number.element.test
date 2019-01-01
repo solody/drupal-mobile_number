@@ -41,7 +41,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
   public function testNumberValidity() {
 
     $local_numbers = array(
-      '0541234567' => 'Valid IL',
+      '0502345678' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
     );
@@ -67,7 +67,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
 
     $input = array(
       'country-code' => 'IL',
-      'mobile' => '0541234567',
+      'mobile' => '0502345678',
     );
 
     foreach ($allowed_countries as $type => $allowed) {
@@ -85,7 +85,7 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
         $input['mobile'] = $ln;
 
         $errors = $this->submitFormElement($element, $input);
-        $valid = '0541234567' == $ln && 'IL' == $c;
+        $valid = '0502345678' == $ln && 'IL' == $c;
 
         $success = $valid ? 'Success' : 'Failure';
         $this->assertTrue($valid == !$errors, "$country country, $local_number local number: $success.", 'Number Validity');
@@ -97,9 +97,9 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
    * Test number verification.
    */
   public function testVerification() {
-    $number = '0541234567';
+    $number = '0502345678';
     $country = 'IL';
-    $value = '+972541234567';
+    $value = '+972502345678';
     $code = MobileNumber::generateVerificationCode();
     $token = MobileNumber::registerVerificationCode($code, $value);
 
@@ -198,9 +198,9 @@ class MobileNumberElementTestCase extends DrupalWebTestCase {
    * Test tfa option.
    */
   public function testTfa() {
-    $number = '0541234567';
+    $number = '0502345678';
     $country = 'IL';
-    $value = '+972541234567';
+    $value = '+972502345678';
     $code = MobileNumber::generateVerificationCode();
     $token = MobileNumber::registerVerificationCode($code, $value);
 
