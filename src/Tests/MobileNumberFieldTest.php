@@ -16,7 +16,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberFieldTest extends WebTestBase {
 
-  public static $modules = ['mobile_number', 'sms', 'node'];
+  public static $modules = ['mobile_number', 'node'];
 
   /**
    * Mobile number util.
