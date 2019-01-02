@@ -45,7 +45,7 @@ class MobileNumberClassTest extends WebTestBase {
     $local_numbers = [
       '+972502345678' => 'International IL',
       '091234567' => 'None mobile IL',
-      '0541234567' => 'Valid IL',
+      '0502345678' => 'Valid IL',
       '111' => 'Invalid IL',
       NULL => 'Empty',
     ];
@@ -69,7 +69,7 @@ class MobileNumberClassTest extends WebTestBase {
         $supposed_valid = FALSE;
         switch ($country) {
           case 'IL':
-            $supposed_valid = $number == '+972502345678' || $number == '0541234567';
+            $supposed_valid = $number == '+972502345678' || $number == '0502345678';
             break;
 
           case NULL:
@@ -89,7 +89,7 @@ class MobileNumberClassTest extends WebTestBase {
    * Test functions.
    */
   public function testFunctions() {
-    $int = '+972541234567';
+    $int = '+972502345678';
     $mobile_number = $this->util->getMobileNumber($int);
 
     $this->assertTrue($this->util->getCountryCode('IL') == 972, "getCountryCode()");
