@@ -12,7 +12,7 @@ use Drupal\simpletest\WebTestBase;
  */
 class MobileNumberClassTest extends WebTestBase {
 
-  public static $modules = ['mobile_number'];
+  public static $modules = ['mobile_number', 'sms'];
 
   /**
    * Mobile number util.
